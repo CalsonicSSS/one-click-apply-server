@@ -9,6 +9,7 @@ ENV/
 env/
 .env
 .env.*
+notes.txt
 
 # IDE
 .idea/
