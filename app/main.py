@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
+from .routes.suggestion_generation import router as generation_router
 
 config_settings = get_settings()
 print(config_settings)
@@ -20,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# We'll add routers here later
+app.include_router(generation_router, prefix="/api/v1")
 
 
 @app.get("/health")
