@@ -87,11 +87,11 @@ suggestion_generation_user_prompt = f"""
         Must Format your response output in the following JSON structure pattern:
         {{
             "resume_suggestions": [
-                {
+                {{
                     "where": "where to replace original text from my resume",
                     "suggestion": "Your tailored suggestion change",
                     "reason": "Explanation of why this change helps"
-                },
+                }},
                 ...
             ],
             "cover_letter": "Full text of the tailored cover letter"
