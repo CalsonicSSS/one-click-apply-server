@@ -14,7 +14,8 @@ from app.utils.claude_handler.claude_prompts import (
 )
 from app.utils.claude_handler.claude_config_apis import claude_message_api
 from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
-from app.error.custom_exceptions import GeneralServerError
+from app.custom_exceptions import GeneralServerError
+from app.constants import TARGET_LLM_MODEL
 
 
 async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
@@ -33,12 +34,14 @@ async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
     """
     print("evalute_raw_html_content runs")
 
+    print("target llm:", TARGET_LLM_MODEL)
+
     system_prompt = html_eval_system_prompt
     user_prompt = html_eval_user_prompt_generator(raw_html_content)
 
     try:
         response = await claude_message_api(
-            model="claude-3-5-haiku-20241022",
+            model=TARGET_LLM_MODEL,
             system_prompt=system_prompt,
             messages=[{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],
             temp=0,
@@ -93,6 +96,8 @@ async def generate_tailored_suggestions(
 
     print("generate_tailored_suggestions runs")
 
+    print("target llm:", TARGET_LLM_MODEL)
+
     # Prepare job details text
     extracted_job_details_text = f"""
     Job Title: {extracted_job_details.job_title}
@@ -137,7 +142,7 @@ async def generate_tailored_suggestions(
     try:
 
         response = await claude_message_api(
-            model="claude-3-5-haiku-20241022",
+            model=TARGET_LLM_MODEL,
             system_prompt=system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,

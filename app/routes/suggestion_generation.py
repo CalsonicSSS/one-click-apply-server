@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.models.suggestion_generation import SuggestionGenerationInputs, SuggestionGenerationResponse
 from app.services.suggestion_generation import evalute_raw_html_content, generate_tailored_suggestions
 from fastapi import Body
-from app.error.custom_exceptions import NoneJobSiteError
+from app.custom_exceptions import NoneJobSiteError
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/generation", tags=["generation"])

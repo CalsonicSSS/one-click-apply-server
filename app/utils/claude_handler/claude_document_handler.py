@@ -4,7 +4,7 @@ from typing import Dict, Any
 from docx import Document
 from PyPDF2 import PdfReader
 from app.models.suggestion_generation import UploadedDocument
-from app.error.custom_exceptions import FileTypeNotSupportedError, GeneralServerError
+from app.custom_exceptions import FileTypeNotSupportedError, GeneralServerError
 
 
 def prepare_document_for_claude(doc: UploadedDocument) -> Dict[str, Any]:
