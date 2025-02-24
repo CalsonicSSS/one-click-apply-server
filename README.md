@@ -1,8 +1,10 @@
-# Resume Tailor Assistant API
+# Wise Craft Project (extension based Resume Tailor)
 
 ## Overview
 
-Resume Tailor Assistant API is a FastAPI-based backend service that provides tailored resume suggestions and cover letter generation based on job posting details and user documents. The service leverages Anthropic's Claude AI models to process job descriptions and resumes to create professional recommendations.
+A copolit to your job hunting and application that stays with you on any job site you view as extension
+No more back and forth copy & paste with chatgpt and other AI tools. We centralized everything with one click to generate full tailored suggestions per posting.
+The service leverages Anthropic's Claude AI models to process job descriptions and resumes to create professional recommendations.
 
 ## Features
 

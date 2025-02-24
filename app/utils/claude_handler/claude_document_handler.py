@@ -4,6 +4,7 @@ from typing import Dict, Any
 from docx import Document
 from PyPDF2 import PdfReader
 from app.models.suggestion_generation import UploadedDocument
+from app.error.custom_exceptions import FileTypeNotSupportedError, GeneralServerError
 
 
 def prepare_document_for_claude(doc: UploadedDocument) -> Dict[str, Any]:
@@ -56,8 +57,14 @@ def prepare_document_for_claude(doc: UploadedDocument) -> Dict[str, Any]:
             return {"type": "text", "text": full_extracted_text}
 
         else:
-            raise ValueError(f"Unsupported file type: {doc.file_type}")
+            raise FileTypeNotSupportedError(
+                detail_message=f"{doc.name} file type '{doc.file_type}' is not supported. Must be either pdf, docx, or txt"
+            )
+
+    except FileTypeNotSupportedError:
+        # we can directly raise this as we have already raised with detail for FileTypeNotSupportedError error type above
+        raise
 
     except Exception as e:
         print(f"Error processing document {doc.name}: {str(e)}")
-        return {"type": "text", "text": f"Error processing document {doc.name}: {str(e)}"}
+        raise GeneralServerError(detail_message="Something went wrong while process your docs")

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from app.models.suggestion_generation import SuggestionGenerationInputs, SuggestionGenerationResponse
 from app.services.suggestion_generation import evalute_raw_html_content, generate_tailored_suggestions
 from fastapi import Body
+from app.error.custom_exceptions import NoneJobSiteError
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/generation", tags=["generation"])
@@ -24,6 +25,4 @@ async def evaluate_and_generate_suggestion(requestInputs: SuggestionGenerationIn
         )
         return suggestion_generated
     else:
-        print("Provided HTML content is not from a job posting site.")
-        # FastAPI will automatically convert the HTTPException into a proper HTTP 400 response
-        raise HTTPException(status_code=400, detail="Provided HTML content is not from a job posting site.")
+        raise NoneJobSiteError(detail_message="Provided HTML content is not from a job posting site.")

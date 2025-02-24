@@ -14,6 +14,7 @@ from app.utils.claude_handler.claude_prompts import (
 )
 from app.utils.claude_handler.claude_config_apis import claude_message_api
 from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
+from app.error.custom_exceptions import GeneralServerError
 
 
 async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
@@ -33,7 +34,6 @@ async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
     print("evalute_raw_html_content runs")
 
     system_prompt = html_eval_system_prompt
-
     user_prompt = html_eval_user_prompt_generator(raw_html_content)
 
     try:
@@ -47,9 +47,6 @@ async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
 
         # based on the prompt, this will return a response in JSON format
         response_text_json = response.content[0].text
-
-        print("---------------------------------------------------------------------------------------------------------")
-        print("eval_result_dict: ", response_text_json)
 
         # to convert the JSON string to a actual Python dictionary
         result_dict = json.loads(response_text_json)
@@ -71,8 +68,8 @@ async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
             return HtmlEvalResult(is_job_posting=False, extracted_job_details=None)
 
     except Exception as e:
-        print(f"Error in job posting detection: {str(e)}")
-        return HtmlEvalResult(is_job_posting=False, extracted_job_details=None)
+        print(f"Error in evalute_raw_html_content process: {str(e)}")
+        raise GeneralServerError(detail_message="Something went wrong while analyzing your job site contents")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -162,5 +159,4 @@ async def generate_tailored_suggestions(
 
     except Exception as e:
         print(f"Error generating suggestions: {str(e)}")
-        # Return fallback response
-        return SuggestionGenerationResponse(resume_suggestions=[], cover_letter=f" ")
+        raise GeneralServerError(detail_message="Something went wrong while generating suggestions for you")
