@@ -14,12 +14,10 @@ async def evaluate_and_generate_suggestion(requestInputs: SuggestionGenerationIn
     and extracts relevant job details for suggestion generation.
     """
     print("cv-suggestions endpoint reached")
-    eval_result = evalute_raw_html_content(requestInputs.raw_job_html_content)
-
-    print(f"eval result: {eval_result}")
+    eval_result = await evalute_raw_html_content(requestInputs.raw_job_html_content)
 
     if eval_result.is_job_posting:
-        suggestion_generated = generate_tailored_suggestions(
+        suggestion_generated = await generate_tailored_suggestions(
             extracted_job_details=eval_result.extracted_job_details,
             resume_doc=requestInputs.resume_doc,
             supporting_docs=requestInputs.supporting_docs,

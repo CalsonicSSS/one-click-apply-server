@@ -1,19 +1,22 @@
-import anthropic
 import json
-from app.config import get_settings
-from app.models.suggestion_generation import ResumeSuggestedChanges, SuggestionGenerationResponse, HtmlEvalResult, DocumentBase64
-from app.utils.claude_api import (
+from app.models.suggestion_generation import (
+    ResumeSuggestedChanges,
+    SuggestionGenerationResponse,
+    HtmlEvalResult,
+    UploadedDocument,
+    JobExtractedContentDetails,
+)
+from app.utils.claude_handler.claude_prompts import (
     html_eval_system_prompt,
     html_eval_user_prompt_generator,
     suggestion_generation_system_prompt,
     suggestion_generation_user_prompt,
 )
+from app.utils.claude_handler.claude_config_apis import claude_message_api
+from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
 
-settings = get_settings()
-client = anthropic.Anthropic(api_key=settings.CLAUDE_API_KEY)
 
-
-def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
+async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
     """
     Detects if the HTML content is from a job posting page and extracts
     relevant job details if it is.
@@ -27,41 +30,56 @@ def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
         - reason: Explanation for the decision
         - extracted_content: Job details if is_job_posting is True
     """
+    print("evalute_raw_html_content runs")
 
     system_prompt = html_eval_system_prompt
 
     user_prompt = html_eval_user_prompt_generator(raw_html_content)
 
     try:
-        response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            system=system_prompt,
+        response = await claude_message_api(
+            model="claude-3-5-haiku-20241022",
+            system_prompt=system_prompt,
             messages=[{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],
-            temperature=0,
-            # specifies the maximum number of tokens that the model will generate in its response. It does not include the tokens from the input message
+            temp=0,
             max_tokens=4000,
         )
 
-        # Extract JSON from response
-        response_text = response.content[0].text
-        # to convert the JSON string to a actual Python dictionary
-        result_dict = json.loads(response_text)
-        result = HtmlEvalResult(
-            is_job_posting=result_dict.get("is_job_posting", False), extracted_job_details=result_dict.get("extracted_job_details", None)
-        )
+        # based on the prompt, this will return a response in JSON format
+        response_text_json = response.content[0].text
 
-        return result
+        print("---------------------------------------------------------------------------------------------------------")
+        print("eval_result_dict: ", response_text_json)
+
+        # to convert the JSON string to a actual Python dictionary
+        result_dict = json.loads(response_text_json)
+
+        if result_dict["is_job_posting"]:
+            return HtmlEvalResult(
+                is_job_posting=result_dict["is_job_posting"],
+                extracted_job_details=JobExtractedContentDetails(
+                    job_title=result_dict["extracted_job_details"]["job_title"],
+                    company_name=result_dict["extracted_job_details"]["company_name"],
+                    job_description=result_dict["extracted_job_details"]["job_description"],
+                    responsibilities=result_dict["extracted_job_details"]["responsibilities"],
+                    requirements=result_dict["extracted_job_details"]["requirements"],
+                    location=result_dict["extracted_job_details"]["location"],
+                    other_additional_details=result_dict["extracted_job_details"]["other_additional_details"],
+                ),
+            )
+        else:
+            return HtmlEvalResult(is_job_posting=False, extracted_job_details=None)
 
     except Exception as e:
         print(f"Error in job posting detection: {str(e)}")
-        return HtmlEvalResult(is_job_posting=False, extracted_content=None)
+        return HtmlEvalResult(is_job_posting=False, extracted_job_details=None)
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
 
 
-def generate_tailored_suggestions(
-    extracted_job_details: dict, resume_doc: DocumentBase64, supporting_docs: list[DocumentBase64] = None
+async def generate_tailored_suggestions(
+    extracted_job_details: JobExtractedContentDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> SuggestionGenerationResponse:
     """
     Generates tailored resume suggestions and cover letter based on the job details
@@ -76,79 +94,73 @@ def generate_tailored_suggestions(
         SuggestionGenerationResponse with resume suggestions and cover letter
     """
 
+    print("generate_tailored_suggestions runs")
+
     # Prepare job details text
     extracted_job_details_text = f"""
-    Job Title: {extracted_job_details.get('job_title', 'N/A')}
-    Company: {extracted_job_details.get('company_name', 'N/A')}
-    Location: {extracted_job_details.get('location', 'N/A')}
+    Job Title: {extracted_job_details.job_title}
+    Company name: {extracted_job_details.company_name}
+    Location: {extracted_job_details.location}
     
     Job Description:
-    {extracted_job_details.get('job_description', 'N/A')}
+    {extracted_job_details.job_description}
     
     Responsibilities:
-    {extracted_job_details.get('responsibilities', 'N/A')}
+    {extracted_job_details.responsibilities}
     
     Requirements:
-    {extracted_job_details.get('requirements', 'N/A')}
+    {extracted_job_details.requirements}
     
-    Additional Details:
-    {extracted_job_details.get('additional_details', 'N/A')}
+    Other additional Details:
+    {extracted_job_details.other_additional_details}
     """
 
     system_prompt = suggestion_generation_system_prompt
 
     # Prepare user prompt content blocks
+    # add resume
     user_prompt_content_blocks = [
         {"type": "text", "text": "base resume"},
-        {
-            "type": "document",
-            "source": {"type": "base64", "media_type": "application/pdf", "data": resume_doc.content},
-        },
+        prepare_document_for_claude(resume_doc),  # Handle resume with proper file type
         {"type": "text", "text": "other user supporting documents if available"},
     ]
 
+    # add other supporting docs
     if supporting_docs:
         for doc in supporting_docs:
-            user_prompt_content_blocks.append({"type": "document", "source": {"type": "base64", "media_type": doc.file_type, "data": doc.content}})
+            user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
-    user_prompt_content_blocks.append({"type": "text", "text": "job posting details"})
+    # add job detail posting content
+    user_prompt_content_blocks.append({"type": "text", "text": "Job posting details"})
     user_prompt_content_blocks.append({"type": "text", "text": f"Job Posting Details:\n{extracted_job_details_text}"})
 
-    # Final user instruction
+    # add user instruction
     user_prompt_content_blocks.append({"type": "text", "text": suggestion_generation_user_prompt})
 
     try:
-        response = client.messages.create(
+
+        response = await claude_message_api(
             model="claude-3-5-sonnet-20241022",
-            system=system_prompt,
+            system_prompt=system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
-            temperature=0.3,
+            temp=0.2,
             max_tokens=4000,
         )
 
-        # Extract JSON from response
-        response_text = response.content[0].text
+        # based on the prompt, this will return a response in JSON format
+        response_text_json = response.content[0].text
+        response_dict = json.loads(response_text_json)
 
-        # Find JSON data in the response (handling potential text before/after JSON)
-        import re
+        resume_suggestions = [
+            ResumeSuggestedChanges(where=sugg.get("where", ""), suggestion=sugg.get("suggestion", ""), reason=sugg.get("reason", ""))
+            for sugg in response_dict.get("resume_suggestions", [])
+        ]
 
-        json_match = re.search(r"({[\s\S]*})", response_text)
-        if json_match:
-            result = json.loads(json_match.group(1))
+        cover_letter = response_dict.get("cover_letter", "")
 
-            # Construct SuggestionGenerationResponse
-            resume_suggestions = [
-                ResumeSuggestedChanges(where=sugg.get("where", ""), suggestion=sugg.get("suggestion", ""), reason=sugg.get("reason", ""))
-                for sugg in result.get("resume_suggestions", [])
-            ]
-
-            return SuggestionGenerationResponse(resume_suggestions=resume_suggestions, cover_letter=result.get("cover_letter", ""))
-        else:
-            # Fallback if JSON parsing fails
-            print("Failed to parse JSON from response")
-            return SuggestionGenerationResponse(resume_suggestions=[], cover_letter="Error: Could not generate cover letter. Please try again.")
+        return SuggestionGenerationResponse(resume_suggestions=resume_suggestions, cover_letter=cover_letter)
 
     except Exception as e:
         print(f"Error generating suggestions: {str(e)}")
         # Return fallback response
-        return SuggestionGenerationResponse(resume_suggestions=[], cover_letter=f"Error generating suggestions: {str(e)}")
+        return SuggestionGenerationResponse(resume_suggestions=[], cover_letter=f" ")

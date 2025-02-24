@@ -10,6 +10,7 @@ env/
 .env
 .env.*
 notes.txt
+test.py
 
 # IDE
 .idea/

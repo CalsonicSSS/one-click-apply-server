@@ -26,10 +26,10 @@ def html_eval_user_prompt_generator(raw_html_content: str):
     If it is not a job posting detail related site, output your response in JSON format as:
     {{
         "is_job_posting": False,
-        extracted_content: None
+        "extracted_job_details": None
     }} 
      
-    If it is, first extract all relevant job information from the raw html content, and fill in below field as much as possible.
+    If it is a proper job posting site, first extract all relevant job information from the raw html content, and fill in below field as much as possible.
     {{
         "is_job_posting": True,
         "extracted_job_details": {{
@@ -43,7 +43,12 @@ def html_eval_user_prompt_generator(raw_html_content: str):
         }}
     }}
 
-    Make sure your output is always in JSON formatting follow exactly above field pattern, and make json content concise and clear and less verbose without any additional information.
+    Output requirement:
+    - Make sure your only output is the pure JSON structure above with these seven fields. 
+    - Make sure all the output in the JSON are properly formatted, and all special characters are properly handled (if there is any) as we will directly use this JSON output for further conversion later.
+    - Do not include any other information in your response.
+    - If any of the fields are not available in the HTML content, leave them as empty strings or lists as default.
+
     
     HTML Content:
     {raw_html_content}
@@ -78,13 +83,23 @@ suggestion_generation_user_prompt = f"""
            - suggested new changes  
            - short indication where it is in my original resume for each
            - A brief explanation / reason why this change will help as reason for each
+           - Do not exagerrate too much in terms of suggestion and quantification, keep it professional after all.
+
            
         2. Generate a professional, tailored one-page cover letter that:
-           - Matches my writing style/tone
-           - Emphasizes my relevant experience
-           - Addresses the specific needs from the job posting
+           - Matches my writing style/tone.
+           - Emphasizes my relevant experience and make it appealing for this specific job posting.
+           - Addresses the specific needs from the job posting relevant to my given base resume and other docs.
+           - Do not exagerrate too much, keep it professional after all.
+           - format cover letter properly such as header, body, and closing, new line other as you see fit. 
         
-        Must Format your response output in the following JSON structure pattern:
+        Output requirement:
+        
+        - Make sure your only output is the pure JSON structure below 
+        - the structure follows: "resume_suggestions" and "cover_letter". The resume_suggestions field is a list of dictionaries, each contains "where", "suggestion", and "reason" fields.
+        - Make sure all the output in the JSON are properly formatted, and all special characters are properly escaped and handled (if there is any) as we will directly use this JSON output for further conversion later.
+        - Do not include any other information in your response.
+
         {{
             "resume_suggestions": [
                 {{
