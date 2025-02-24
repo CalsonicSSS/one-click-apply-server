@@ -59,17 +59,20 @@ suggestion_generation_system_prompt = """
     You are an expert resume and cover letter tailoring assistant. Your task is to generate precise, tailored suggestions for a job applicant's resume and create a professional cover letter, all tailored to the given specific job posting in this message.
     
     Your goal is to:
-    1. Analyze both the job posting details and the user's base resume/supporting documents as professional background information
-    2. Identify 2-4 key places (or as you see fit) in the resume where tailored and relevant changes would improve the chance of passing through Applicant Tracking Systems (ATS)
-    3. Generate specific, tailored resume suggestions from your identifications:
+    1. Analyze the job posting details given here  
+    2. Thoroughly analyze the user's base resume and supporting documents (if available), which will be provided as extracted text from (PDF, TXT or DOCX). Identify and categorize key sections, and structures from the pure text format.  
+    3. Identify 2-4 key places (or as you see fit) in the resume where tailored and relevant changes would improve the chance of passing through Applicant Tracking Systems (ATS) for this job posting.
+    4. Generate specific, tailored resume suggestions from your identifications:
        - Incorporate relevant keywords from the job posting
        - Quantify achievements where possible (e.g., "Increased data processing efficiency by 30% through automation")
        - Highlight the most relevant experiences and skills that match the job requirements
-    4. Create a one-page professional cover letter that:
+    4. Create a one-page long professional cover letter that:
        - Uses the same tone as the user's existing documents as much as possible
-       - Showcases the user's relevant experience and skills
-       - Highlights the candidate's most relevant qualifications
+       - Showcases the user's relevant experience and skills to the job posting
+       - Highlights the candidate's most relevant qualifications to the job posting
        - Expresses enthusiasm for the position
+       - Do not exagerrate too much, keep it professional after all.
+
     5. Review and make sure all your suggestions and generation are targeted to the job posting details and based on user's given base resume and other docs
     
     Your suggestions should be specific, practical, and targeted to make the resume more appealing for this particular job.
@@ -77,7 +80,7 @@ suggestion_generation_system_prompt = """
 
 
 suggestion_generation_user_prompt = f"""
-        Based on the job posting detail given and my documents as background:
+        Based on the job posting detail given and my documents as background after analysis:
         
         1. Provide 2-4 specific places in my resume to tailor, with:
            - suggested new changes  
@@ -86,7 +89,7 @@ suggestion_generation_user_prompt = f"""
            - Do not exagerrate too much in terms of suggestion and quantification, keep it professional after all.
 
            
-        2. Generate a professional, tailored one-page cover letter that:
+        2. Generate a professional, tailored one-page length cover letter that:
            - Matches my writing style/tone.
            - Emphasizes my relevant experience and make it appealing for this specific job posting.
            - Addresses the specific needs from the job posting relevant to my given base resume and other docs.

@@ -122,7 +122,7 @@ async def generate_tailored_suggestions(
     user_prompt_content_blocks = [
         {"type": "text", "text": "base resume"},
         prepare_document_for_claude(resume_doc),  # Handle resume with proper file type
-        {"type": "text", "text": "other user supporting documents if available"},
+        {"type": "text", "text": "other user supporting document(s) if provided"},
     ]
 
     # add other supporting docs
@@ -140,7 +140,7 @@ async def generate_tailored_suggestions(
     try:
 
         response = await claude_message_api(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-3-5-haiku-20241022",
             system_prompt=system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
