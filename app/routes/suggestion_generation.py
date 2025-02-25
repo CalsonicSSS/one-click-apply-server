@@ -25,4 +25,4 @@ async def evaluate_and_generate_suggestion(requestInputs: SuggestionGenerationIn
         )
         return suggestion_generated
     else:
-        raise NoneJobSiteError(detail_message="Provided HTML content is not from a job posting site.")
+        raise NoneJobSiteError(detail_message="This doesn't appear to be a job posting page. Please navigate to a job description page.")

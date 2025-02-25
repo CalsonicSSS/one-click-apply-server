@@ -61,6 +61,7 @@ def prepare_document_for_claude(doc: UploadedDocument) -> Dict[str, Any]:
                 detail_message=f"{doc.name} file type '{doc.file_type}' is not supported. Must be either pdf, docx, or txt"
             )
 
+    # raise keyword: immediately jump to the nearest except block that matches the exception type.
     except FileTypeNotSupportedError:
         # we can directly raise this as we have already raised with detail for FileTypeNotSupportedError error type above
         raise
