@@ -59,21 +59,20 @@ suggestion_generation_system_prompt = """
     You are an expert resume and cover letter tailoring assistant. Your task is to generate precise, tailored suggestions for a job applicant's resume and create a professional cover letter, all tailored to the given specific job posting in this message.
     
     Your goal is to:
-    1. Analyze the job posting details given here  
-    2. Thoroughly analyze the user's base resume and supporting documents (if available), which will be provided as extracted text from (PDF, TXT or DOCX). Identify and categorize key sections, and structures from the pure text format.  
-    3. Identify 2-4 key places (or as you see fit) in the resume where tailored and relevant changes would improve the chance of passing through Applicant Tracking Systems (ATS) for this job posting.
+    1. Analyze the given job posting details  
+    2. Go through the user's base resume and supporting documents (if available), which will be provided as extracted text from (PDF, TXT or DOCX). Identify and categorize key sections, and structures.  
+    3. Identify 3 key places (or as you see fit) in the resume where relevant tailored changes would improve the chance of passing through Applicant Tracking Systems (ATS) for this posting.
     4. Generate specific, tailored resume suggestions from your identifications:
        - Incorporate relevant keywords from the job posting
        - Quantify achievements where possible (e.g., "Increased data processing efficiency by 30% through automation")
        - Highlight the most relevant experiences and skills that match the job requirements
-    4. Create a one-page long professional cover letter that:
+    5. Create a one-page long professional cover letter that:
        - Uses the same tone as the user's existing documents as much as possible
        - Showcases the user's relevant experience and skills to the job posting
        - Highlights the candidate's most relevant qualifications to the job posting
        - Expresses enthusiasm for the position
        - Do not exagerrate too much, keep it professional after all.
-
-    5. Review and make sure all your suggestions and generation are targeted to the job posting details and based on user's given base resume and other docs
+    6. Finally, make sure generated output handles and escapes control or special characters properly while preserving formatting. 
     
     Your suggestions should be specific, practical, and targeted to make the resume more appealing for this particular job.
     """
@@ -82,28 +81,31 @@ suggestion_generation_system_prompt = """
 suggestion_generation_user_prompt = f"""
         Based on the job posting detail given and my documents as background after analysis:
         
-        1. Provide 2-4 specific places in my resume to tailor, with:
-           - suggested new changes  
-           - short indication where it is in my original resume for each
-           - A brief explanation / reason why this change will help as reason for each
-           - Do not exagerrate too much in terms of suggestion and quantification, keep it professional after all.
+        1. Provide 2-4 specific tailored suggestion changes in my resume:
+           - aim to pass ATS for this job posting and quantify achievements where possible (e.g., "Increased data processing efficiency by 30% through automation")
+           - indication where it is in my original resume for each
+           - Ensure the suggested text length closely matches the original replacement length on average. Avoid overly lengthy resume suggestions.  
+           - A brief reason why this change will help as reason for each
+           - Do not exagerrate too of suggestion and quantification, keep it professional and realistic.
 
            
         2. Generate a professional, tailored one-page length cover letter that:
            - Matches my writing style/tone.
            - Emphasizes my relevant experience and make it appealing for this specific job posting.
            - Addresses the specific needs from the job posting relevant to my given base resume and other docs.
-           - Do not exagerrate too much, keep it professional after all.
+           - Do not exagerrate too much on the cover letter, always keep it professional and tailored as goal.
            - format cover letter properly such as header, body, and closing, new line other as you see fit. 
         
         Output requirement:
         
-        - Make sure your only output is the pure JSON structure below 
-        - the structure follows: "resume_suggestions" and "cover_letter". The resume_suggestions field is a list of dictionaries, each contains "where", "suggestion", and "reason" fields.
-        - Make sure all the output in the JSON are properly formatted, and all special characters are properly escaped and handled (if there is any) as we will directly use this JSON output for further conversion later.
-        - Do not include any other information in your response.
+        - Make sure your output response is ONLY the pure JSON structure below. Do not include any other value in your response
+        - the structure follows: "company_name", "job_title_name", "suggestion_title", "resume_suggestions", and "cover_letter" as 4 fields. 
+        - The resume_suggestions field is a list of dictionaries, each contains "where", "suggestion", and "reason" fields. 
+        - Make sure text output is properly formatted, with all special & control characters are correctly escaped and handled. Ensure it is valid for `json.loads()` in Python
 
         {{
+            "company_name": "the company name"
+            "job_title_name: "job title name"
             "resume_suggestions": [
                 {{
                     "where": "where to replace original text from my resume",

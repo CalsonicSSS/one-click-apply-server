@@ -151,7 +151,7 @@ async def generate_tailored_suggestions(
 
         # based on the prompt, this will return a response in JSON format
         response_text_json = response.content[0].text
-        response_dict = json.loads(response_text_json)
+        response_dict = json.loads(response_text_json, strict=False)
 
         resume_suggestions = [
             ResumeSuggestedChanges(where=sugg.get("where", ""), suggestion=sugg.get("suggestion", ""), reason=sugg.get("reason", ""))
@@ -159,8 +159,15 @@ async def generate_tailored_suggestions(
         ]
 
         cover_letter = response_dict.get("cover_letter", "")
+        company_name = response_dict.get("company_name", "")
+        job_title_name = response_dict.get("job_title_name", "")
 
-        return SuggestionGenerationResponse(resume_suggestions=resume_suggestions, cover_letter=cover_letter)
+        return SuggestionGenerationResponse(
+            resume_suggestions=resume_suggestions,
+            cover_letter=cover_letter,
+            company_name=company_name,
+            job_title_name=job_title_name,
+        )
 
     except Exception as e:
         print(f"Error generating suggestions: {str(e)}")
