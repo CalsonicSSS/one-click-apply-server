@@ -44,5 +44,6 @@ class ResumeSuggestedChanges(BaseModel):
 class SuggestionGenerationResponse(BaseModel):
     company_name: str
     job_title_name: str
+    applicant_name: str
     resume_suggestions: List[ResumeSuggestedChanges]
     cover_letter: str

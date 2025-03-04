@@ -122,9 +122,9 @@ async def generate_tailored_suggestions(
     # Prepare user prompt content blocks
     # add resume
     user_prompt_content_blocks = [
-        {"type": "text", "text": "base resume"},
+        {"type": "text", "text": "my base resume"},
         prepare_document_for_claude(resume_doc),  # Handle resume with proper file type
-        {"type": "text", "text": "other user supporting document(s) if provided"},
+        {"type": "text", "text": "my other professional supporting materials if provided"},
     ]
 
     # add other supporting docs
@@ -161,12 +161,14 @@ async def generate_tailored_suggestions(
         cover_letter = response_dict.get("cover_letter", "")
         company_name = response_dict.get("company_name", "")
         job_title_name = response_dict.get("job_title_name", "")
+        applicant_name = response_dict.get("applicant_name", "")
 
         return SuggestionGenerationResponse(
             resume_suggestions=resume_suggestions,
             cover_letter=cover_letter,
             company_name=company_name,
             job_title_name=job_title_name,
+            applicant_name=applicant_name,
         )
 
     except Exception as e:
