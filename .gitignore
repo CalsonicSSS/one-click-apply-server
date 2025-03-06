@@ -12,6 +12,7 @@ env/
 notes.txt
 test.py
 actions.txt
+others
 
 # IDE
 .idea/

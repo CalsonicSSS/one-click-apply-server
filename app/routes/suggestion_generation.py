@@ -1,28 +1,38 @@
 from fastapi import APIRouter
-from app.models.suggestion_generation import SuggestionGenerationInputs, SuggestionGenerationResponse
-from app.services.suggestion_generation import evalute_raw_html_content, generate_tailored_suggestions
+from app.models.job_posting_eval import JobPostingEvalRequestInputs, JobPostingEvalResultResponse
+from app.models.resume_suggestions import ResumeSuggestionGenerationRequestInputs, ResumeSuggestionsResponse
+from app.models.cover_letter import CoverLetterGenerationRequestInputs, CoverLetterGenerationResponse
+from app.services.suggestion_generation import (
+    evaluate_job_posting_html_content_handler,
+    generate_resume_suggestions_handler,
+    generate_cover_letter_handler,
+)
 from fastapi import Body
-from app.custom_exceptions import NoneJobSiteError
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/generation", tags=["generation"])
 
 
-@router.post("/cv-suggestions", response_model=SuggestionGenerationResponse)
-async def evaluate_and_generate_suggestion(requestInputs: SuggestionGenerationInputs = Body(...)):
-    """
-    Evaluates if the provided HTML content is from a job posting site
-    and extracts relevant job details for suggestion generation.
-    """
-    print("cv-suggestions endpoint reached")
-    eval_result = await evalute_raw_html_content(requestInputs.raw_job_html_content)
+@router.post("/job-posting/evaluate", response_model=JobPostingEvalResultResponse)
+async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequestInputs = Body(...)):
+    print("/job-posting/evaluate endpoint reached")
+    result = await evaluate_job_posting_html_content_handler(raw_html_content=requestInputs.raw_job_html_content)
+    return result
 
-    if eval_result.is_job_posting:
-        suggestion_generated = await generate_tailored_suggestions(
-            extracted_job_details=eval_result.extracted_job_details,
-            resume_doc=requestInputs.resume_doc,
-            supporting_docs=requestInputs.supporting_docs,
-        )
-        return suggestion_generated
-    else:
-        raise NoneJobSiteError(detail_message="This doesn't appear to be a job posting page. Please navigate to a job description page.")
+
+@router.post("/resume/suggestions-generate", response_model=ResumeSuggestionsResponse)
+async def generate_resume_suggestions(requestInputs: ResumeSuggestionGenerationRequestInputs = Body(...)):
+    print("/resume/suggestions-generate endpoint reached")
+    result = await generate_resume_suggestions_handler(
+        extracted_job_posting_details=requestInputs.extracted_job_posting_details, resume_doc=requestInputs.resume_doc
+    )
+    return result
+
+
+@router.post("/cover-letter/generate", response_model=CoverLetterGenerationResponse)
+async def generate_cover_letter(requestInputs: CoverLetterGenerationRequestInputs = Body(...)):
+    print("/cover-letter/generate endpoint reached")
+    result = await generate_cover_letter_handler(
+        extracted_job_posting_details=requestInputs.extracted_job_posting_details, resume_doc=requestInputs.resume_doc
+    )
+    return result

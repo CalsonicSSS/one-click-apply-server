@@ -1,16 +1,18 @@
 import json
-from app.models.suggestion_generation import (
-    ResumeSuggestedChanges,
-    SuggestionGenerationResponse,
-    HtmlEvalResult,
-    UploadedDocument,
-    JobExtractedContentDetails,
-)
+
+from app.models.job_posting_eval import JobPostingEvalResultResponse, ExtractedJobPostingDetails
+from app.models.resume_suggestions import ResumeSuggestionsResponse, ResumeSuggestion
+from app.models.cover_letter import CoverLetterGenerationResponse
+from app.models.uploaded_doc import UploadedDocument
+from app.custom_exceptions import NoneJobSiteError
+
 from app.utils.claude_handler.claude_prompts import (
     html_eval_system_prompt,
     html_eval_user_prompt_generator,
-    suggestion_generation_system_prompt,
-    suggestion_generation_user_prompt,
+    cover_letter_gen_system_prompt,
+    cover_letter_gen_user_prompt,
+    resume_suggestion_gen_system_prompt,
+    resume_suggestion_gen_user_prompt,
 )
 from app.utils.claude_handler.claude_config_apis import claude_message_api
 from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
@@ -18,29 +20,15 @@ from app.custom_exceptions import GeneralServerError
 from app.constants import TARGET_LLM_MODEL
 
 
-async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
-    """
-    Detects if the HTML content is from a job posting page and extracts
-    relevant job details if it is.
-
-    Args:
-        raw_html_content: The original raw HTML content of the page
-
-    Returns:
-        A dictionary with:
-        - is_job_posting: Boolean indicating if page is a job posting
-        - reason: Explanation for the decision
-        - extracted_content: Job details if is_job_posting is True
-    """
-    print("evalute_raw_html_content runs")
-
+async def evaluate_job_posting_html_content_handler(raw_html_content: str) -> JobPostingEvalResultResponse:
+    print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL)
 
     system_prompt = html_eval_system_prompt
     user_prompt = html_eval_user_prompt_generator(raw_html_content)
 
     try:
-        response = await claude_message_api(
+        llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL,
             system_prompt=system_prompt,
             messages=[{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],
@@ -49,99 +37,81 @@ async def evalute_raw_html_content(raw_html_content: str) -> HtmlEvalResult:
         )
 
         # based on the prompt, this will return a response in JSON format
-        response_text_json = response.content[0].text
+        llm_response_text_json = llm_response.content[0].text
 
         # to convert the JSON string to a actual Python dictionary
-        result_dict = json.loads(response_text_json)
+        response_dict = json.loads(llm_response_text_json, strict=False)
 
-        if result_dict["is_job_posting"]:
-            return HtmlEvalResult(
-                is_job_posting=result_dict["is_job_posting"],
-                extracted_job_details=JobExtractedContentDetails(
-                    job_title=result_dict["extracted_job_details"]["job_title"],
-                    company_name=result_dict["extracted_job_details"]["company_name"],
-                    job_description=result_dict["extracted_job_details"]["job_description"],
-                    responsibilities=result_dict["extracted_job_details"]["responsibilities"],
-                    requirements=result_dict["extracted_job_details"]["requirements"],
-                    location=result_dict["extracted_job_details"]["location"],
-                    other_additional_details=result_dict["extracted_job_details"]["other_additional_details"],
+        if response_dict["is_job_posting"]:
+            return JobPostingEvalResultResponse(
+                is_job_posting=response_dict["is_job_posting"],
+                extracted_job_posting_details=ExtractedJobPostingDetails(
+                    job_title=response_dict["extracted_job_details"]["job_title"],
+                    company_name=response_dict["extracted_job_details"]["company_name"],
+                    job_description=response_dict["extracted_job_details"]["job_description"],
+                    responsibilities=response_dict["extracted_job_details"]["responsibilities"],
+                    requirements=response_dict["extracted_job_details"]["requirements"],
+                    location=response_dict["extracted_job_details"]["location"],
+                    other_additional_details=response_dict["extracted_job_details"]["other_additional_details"],
                 ),
             )
         else:
-            return HtmlEvalResult(is_job_posting=False, extracted_job_details=None)
+            raise NoneJobSiteError(
+                detail_message="This page doesn't appear to be a job posting. Please navigate to a single target job posting detail page."
+            )
 
     except Exception as e:
-        print(f"Error in evalute_raw_html_content process: {str(e)}")
-        raise GeneralServerError(detail_message="Something went wrong while analyzing your job site contents")
+        print(f"Error occur when evalute job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Something went wrong while analyzing the current job posting site")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
 
 
-async def generate_tailored_suggestions(
-    extracted_job_details: JobExtractedContentDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
-) -> SuggestionGenerationResponse:
-    """
-    Generates tailored resume suggestions and cover letter based on the job details
-    and user's documents.
-
-    Args:
-        extracted_job_details: Extracted job posting details
-        resume_doc: User's resume document (base64 encoded)
-        supporting_docs: User's additional supporting documents (base64 encoded)
-
-    Returns:
-        SuggestionGenerationResponse with resume suggestions and cover letter
-    """
-
-    print("generate_tailored_suggestions runs")
-
+async def generate_resume_suggestions_handler(
+    extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument
+) -> ResumeSuggestionsResponse:
+    print("generate_resume_suggestions_handler runs")
     print("target llm:", TARGET_LLM_MODEL)
 
     # Prepare job details text
-    extracted_job_details_text = f"""
-    Job Title: {extracted_job_details.job_title}
-    Company name: {extracted_job_details.company_name}
-    Location: {extracted_job_details.location}
+    extracted_job_posting_details_text = f"""
+    Job Title: {extracted_job_posting_details.job_title}
+    Company name: {extracted_job_posting_details.company_name}
+    Location: {extracted_job_posting_details.location}
     
     Job Description:
-    {extracted_job_details.job_description}
+    {extracted_job_posting_details.job_description}
     
     Responsibilities:
-    {extracted_job_details.responsibilities}
+    {extracted_job_posting_details.responsibilities}
     
     Requirements:
-    {extracted_job_details.requirements}
+    {extracted_job_posting_details.requirements}
     
     Other additional Details:
-    {extracted_job_details.other_additional_details}
+    {extracted_job_posting_details.other_additional_details}
     """
 
-    system_prompt = suggestion_generation_system_prompt
+    system_prompt = resume_suggestion_gen_system_prompt
 
-    # Prepare user prompt content blocks
+    # user prompt content blocks
     # add resume
     user_prompt_content_blocks = [
         {"type": "text", "text": "my base resume"},
         prepare_document_for_claude(resume_doc),  # Handle resume with proper file type
-        {"type": "text", "text": "my other professional supporting materials if provided"},
     ]
 
-    # add other supporting docs
-    if supporting_docs:
-        for doc in supporting_docs:
-            user_prompt_content_blocks.append(prepare_document_for_claude(doc))
-
     # add job detail posting content
-    user_prompt_content_blocks.append({"type": "text", "text": "Job posting details"})
-    user_prompt_content_blocks.append({"type": "text", "text": f"Job Posting Details:\n{extracted_job_details_text}"})
+    user_prompt_content_blocks.append({"type": "text", "text": "Job posting details:"})
+    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_job_posting_details_text}"})
 
     # add user instruction
-    user_prompt_content_blocks.append({"type": "text", "text": suggestion_generation_user_prompt})
+    user_prompt_content_blocks.append({"type": "text", "text": resume_suggestion_gen_user_prompt})
 
     try:
 
-        response = await claude_message_api(
+        llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL,
             system_prompt=system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
@@ -150,27 +120,98 @@ async def generate_tailored_suggestions(
         )
 
         # based on the prompt, this will return a response in JSON format
-        response_text_json = response.content[0].text
-        response_dict = json.loads(response_text_json, strict=False)
+        llm_response_text_json = llm_response.content[0].text
+        response_dict = json.loads(llm_response_text_json, strict=False)
 
         resume_suggestions = [
-            ResumeSuggestedChanges(where=sugg.get("where", ""), suggestion=sugg.get("suggestion", ""), reason=sugg.get("reason", ""))
+            ResumeSuggestion(where=sugg.get("where", ""), suggestion=sugg.get("suggestion", ""), reason=sugg.get("reason", ""))
             for sugg in response_dict.get("resume_suggestions", [])
         ]
 
+        return ResumeSuggestionsResponse(
+            resume_suggestions=resume_suggestions,
+        )
+
+    except Exception as e:
+        print(f"Error occurred when generating resume suggestions: {str(e)}")
+        raise GeneralServerError(error_detail_message="Something went wrong while generating resume suggestions for you")
+
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+
+async def generate_cover_letter_handler(
+    extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
+) -> CoverLetterGenerationResponse:
+    print("generate_cover_letter_handler runs")
+    print("target llm:", TARGET_LLM_MODEL)
+
+    # Prepare job details text
+    extracted_job_posting_details_text = f"""
+    Job Title: {extracted_job_posting_details.job_title}
+    Company name: {extracted_job_posting_details.company_name}
+    Location: {extracted_job_posting_details.location}
+    
+    Job Description:
+    {extracted_job_posting_details.job_description}
+    
+    Responsibilities:
+    {extracted_job_posting_details.responsibilities}
+    
+    Requirements:
+    {extracted_job_posting_details.requirements}
+    
+    Other additional Details:
+    {extracted_job_posting_details.other_additional_details}
+    """
+
+    system_prompt = cover_letter_gen_system_prompt
+
+    # Prepare user prompt content blocks
+    # add resume
+    user_prompt_content_blocks = [
+        {"type": "text", "text": "my base resume"},
+        prepare_document_for_claude(resume_doc),
+        {"type": "text", "text": "my additional professional context (if provided)"},
+    ]
+
+    # add other supporting docs
+    if supporting_docs:
+        for doc in supporting_docs:
+            user_prompt_content_blocks.append(prepare_document_for_claude(doc))
+
+    # add job detail posting content
+    user_prompt_content_blocks.append({"type": "text", "text": "Job posting details:"})
+    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_job_posting_details_text}"})
+
+    # add user instruction
+    user_prompt_content_blocks.append({"type": "text", "text": cover_letter_gen_user_prompt})
+
+    try:
+
+        llm_response = await claude_message_api(
+            model=TARGET_LLM_MODEL,
+            system_prompt=system_prompt,
+            messages=[{"role": "user", "content": user_prompt_content_blocks}],
+            temp=0.2,
+            max_tokens=4000,
+        )
+
+        # based on the prompt, this will return a response in JSON format
+        llm_response_text_json = llm_response.content[0].text
+        response_dict = json.loads(llm_response_text_json, strict=False)
+
         cover_letter = response_dict.get("cover_letter", "")
-        company_name = response_dict.get("company_name", "")
-        job_title_name = response_dict.get("job_title_name", "")
         applicant_name = response_dict.get("applicant_name", "")
 
-        return SuggestionGenerationResponse(
-            resume_suggestions=resume_suggestions,
+        return CoverLetterGenerationResponse(
             cover_letter=cover_letter,
-            company_name=company_name,
-            job_title_name=job_title_name,
+            company_name=extracted_job_posting_details.company_name,
+            job_title_name=extracted_job_posting_details.job_title,
+            location=extracted_job_posting_details.location,
             applicant_name=applicant_name,
         )
 
     except Exception as e:
-        print(f"Error generating suggestions: {str(e)}")
-        raise GeneralServerError(detail_message="Something went wrong while generating suggestions for you")
+        print(f"Error occurred when generating cover letter: {str(e)}")
+        raise GeneralServerError(error_detail_message="Something went wrong while generating cover letter for you")

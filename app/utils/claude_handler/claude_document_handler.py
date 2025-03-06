@@ -3,7 +3,7 @@ from io import BytesIO
 from typing import Dict, Any
 from docx import Document
 from PyPDF2 import PdfReader
-from app.models.suggestion_generation import UploadedDocument
+from app.models.uploaded_doc import UploadedDocument
 from app.custom_exceptions import FileTypeNotSupportedError, GeneralServerError
 
 
