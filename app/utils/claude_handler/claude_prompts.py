@@ -1,13 +1,10 @@
 html_eval_system_prompt = """
-You are an expert system that can raw analyze HTML content and determine if html content string it's a single job posting detail page.
+You are an expert system that analyzes HTML content to identify job postings and extract key information.
+
 Your task is to:
-1. Determine if the HTML content represents a SINGLE TARGET job posting detail page 
-2. Think thoroughly for your determination. There are 3 typical cases that they are not a single job posting detail site: 
-    - not a job posting related site at all 
-    - a main web page that list of all jobs cards for users 
-    - a job application input form site THAT DOES NOT HAVE ALL THE JOB POSTING DETAILS
-3. If it is NOT a SINGLE job posting detail site, no need to extract any information or data 
-4. If it is a SINGLE job posting detail site, extract all relevant information including as much of the following as possible:
+1. Go through and analyze the raw html string extracted from a web page.
+2. Determine if the provided content represents a job posting related site. You can use the below guidelines and SIGNALS as additional guide for your determination.
+3. If it is a job posting, extract all available job details, including:
     - Job title
     - Company name
     - Job description
@@ -16,11 +13,35 @@ Your task is to:
     - Location
     - Other additional details
 
-Follow these guidelines:
-- Focus on recognizing common patterns in job posting pages
-- Pages with detailed job descriptions, requirements, responsibilities are job postings
-- Pages with application forms without detailed job info are likely not proper job postings
-- Pages completely unrelated to jobs posting detils (e.g., news, blogs) are not job postings
+Additional guidelines for analyzing content:
+
+IMPORTANT MARKERS TO LOOK FOR:
+- If you see the marker "[IFRAME CONTENT DETECTED]", this indicates that meaningful content was extracted from an iframe. Treat this as a strong signal of a job posting if the content includes job-related information.
+- If you see the marker "[CONTENT TRUNCATED DUE TO LENGTH LIMITATIONS]", this indicates that the content was too long and was truncated. Focus on the available content for analysis.
+
+HIGH CONFIDENCE SIGNALS (treat as strong evidence):
+- Job application forms or "Apply Now" buttons.
+- Job title followed by company name in a standard format.
+- Structured lists of requirements, responsibilities, or qualifications.
+- Salary information, benefits details, or employment type.
+- Explicit mentions of "job posting" or "job description."
+- Keywords like "we're hiring," "join our team," or "career opportunities."
+
+MEDIUM CONFIDENCE SIGNALS:
+- URLs containing "/jobs/", "/careers/", or "/apply/".
+- Page titles containing words like "job," "career," "position," or "vacancy."
+- Content mentioning skills, experience levels, or education requirements.
+- Discussion of company culture or team environment.
+
+LOW CONFIDENCE SIGNALS:
+- Generic content without specific job-related details.
+- Pages with minimal or unrelated information (e.g., news, blogs, or advertisements).
+
+Common guidelines:
+- Focus on recognizing common patterns in job posting pages.
+- Pages with detailed job descriptions, requirements, and responsibilities are likely job postings.
+- Pages completely unrelated to job postings (e.g., news, blogs) are not job postings.
+- If the content is ambiguous, provide a lower confidence level and explain your reasoning.
 """
 
 
@@ -93,6 +114,7 @@ Based on the given job posting detail and my base professional resume, help me
 - Ensure your response is a pure JSON structure as outlined below, without additional data.
 - The "resume_suggestions" field is a list of dictionaries, each containing "where", "suggestion", and "reason" fields.
 - Ensure the text output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` in Python.
+- Make sure the suggestion only contains the new suggested contents that can be directly copied for change. Do not include any other assisting wordings 
 
 {{
     "resume_suggestions": [

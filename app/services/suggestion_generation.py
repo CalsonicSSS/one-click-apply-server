@@ -1,5 +1,5 @@
 import json
-
+import traceback
 from app.models.job_posting_eval import JobPostingEvalResultResponse, ExtractedJobPostingDetails
 from app.models.resume_suggestions import ResumeSuggestionsResponse, ResumeSuggestion
 from app.models.cover_letter import CoverLetterGenerationResponse
@@ -26,6 +26,9 @@ async def evaluate_job_posting_html_content_handler(raw_html_content: str) -> Jo
 
     system_prompt = html_eval_system_prompt
     user_prompt = html_eval_user_prompt_generator(raw_html_content)
+
+    # print("raw_html_content:")
+    # print(raw_html_content)
 
     try:
         llm_response = await claude_message_api(
@@ -57,12 +60,17 @@ async def evaluate_job_posting_html_content_handler(raw_html_content: str) -> Jo
             )
         else:
             raise NoneJobSiteError(
-                detail_message="This page doesn't appear to be a job posting. Please navigate to a single target job posting detail page."
+                error_detail_message="This page doesn't appear to be a job posting. Please navigate to a single target job posting detail page."
             )
+    except NoneJobSiteError:
+        print(traceback.format_exc())
+        raise
 
     except Exception as e:
         print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Something went wrong while analyzing the current job posting site")
+        raise GeneralServerError(
+            error_detail_message="The AI Model experiencing high demand while analyzing the current job page. Please retry later"
+        )
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -134,7 +142,9 @@ async def generate_resume_suggestions_handler(
 
     except Exception as e:
         print(f"Error occurred when generating resume suggestions: {str(e)}")
-        raise GeneralServerError(error_detail_message="Something went wrong while generating resume suggestions for you")
+        raise GeneralServerError(
+            error_detail_message="The AI Model experiencing high demand while while generating resume suggestions for you. Please retry later"
+        )
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -214,4 +224,6 @@ async def generate_cover_letter_handler(
 
     except Exception as e:
         print(f"Error occurred when generating cover letter: {str(e)}")
-        raise GeneralServerError(error_detail_message="Something went wrong while generating cover letter for you")
+        raise GeneralServerError(
+            error_detail_message="The AI Model experiencing high demand while while generating cover letter for you. Please retry later"
+        )
