@@ -1,140 +1,156 @@
-# Wise Craft Project (extension based Resume Tailor)
+# Wise Craft Server
+
+Backend API service for the Wise Craft Chrome extension, providing AI-powered job application assistance using FastAPI and Anthropic's Claude models.
 
 ## Overview
 
-A copolit to your job hunting and application that stays with you on any job site you view as extension
-No more back and forth copy & paste with chatgpt and other AI tools. We centralized everything with one click to generate full tailored suggestions per posting.
-The service leverages Anthropic's Claude AI models to process job descriptions and resumes to create professional recommendations.
+This server provides the intelligence behind the Wise Craft Chrome extension, using Anthropic's Claude AI models to:
 
-## Features
-
-- Extract job details from raw HTML content
-- Analyze job postings to determine relevance
-- Generate resume improvement suggestions
-- Create a professionally tailored cover letter
-- Handle various document types (PDF, DOCX, TXT)
+- Analyze job posting content
+- Generate tailored resume suggestions
+- Create personalized cover letters
+- Craft responses to application questions
 
 ## Tech Stack
 
-- **FastAPI**: Backend framework for API development
-- **Anthropic Claude API**: AI-powered text generation
-- **Pydantic**: Data validation and settings management
-- **CORS Middleware**: Secure API access configuration
+- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) - Modern, high-performance web framework
+- **Language**: Python 3.9+
+- **AI Integration**: [Anthropic Claude API](https://www.anthropic.com/claude)
+- **Validation**: [Pydantic](https://pydantic-docs.helpmanual.io/) - Data validation and settings management
+- **Document Processing**:
+  - PyPDF2 - PDF parsing
+  - python-docx - DOCX parsing
 
 ## Project Structure
 
 ```
 app/
-├── main.py                          # FastAPI application entry point
-├── config.py                        # Configuration settings using Pydantic
-├── routes/
-│   ├── suggestion_generation.py     # API routes for suggestion generation
-├── services/
-│   ├── suggestion_generation.py     # Business logic for tailoring resumes
-├── utils/
-│   ├── claude_handler/
-│   │   ├── claude_config_apis.py    # Claude API integration
-│   │   ├── claude_document_handler.py # Document handling for AI processing
-│   │   ├── claude_prompts.py        # AI prompt templates
-├── models/
-│   ├── suggestion_generation.py     # Pydantic models for API request/response
+├── config.py                 # Application configuration using Pydantic
+├── constants.py              # Application constants
+├── custom_exceptions.py      # Custom HTTP exceptions
+├── main.py                   # FastAPI application entry point
+├── models/                   # Pydantic models for request/response validation
+│   ├── application_question.py
+│   ├── cover_letter.py
+│   ├── job_posting_eval.py
+│   ├── resume_suggestions.py
+│   └── uploaded_doc.py
+├── routes/                   # API route definitions
+│   └── suggestion_generation.py
+├── services/                 # Business logic
+│   └── suggestion_generation.py
+└── utils/                    # Utility functions
+    └── claude_handler/       # Claude API integration utilities
+        ├── claude_config_apis.py
+        ├── claude_document_handler.py
+        └── claude_prompts.py
 ```
 
-## Installation
+## API Endpoints
+
+The server exposes the following endpoints under the `/api/v1/generation` prefix:
+
+| Endpoint                       | Method | Description                                                                   |
+| ------------------------------ | ------ | ----------------------------------------------------------------------------- |
+| `/job-posting/evaluate`        | POST   | Analyzes HTML content to determine if it's a job posting and extracts details |
+| `/resume/suggestions-generate` | POST   | Generates tailored resume suggestions based on job posting and user's resume  |
+| `/cover-letter/generate`       | POST   | Creates a personalized cover letter for a specific job                        |
+| `/application-question/answer` | POST   | Generates responses to application questions                                  |
+
+## Setup and Installation
 
 ### Prerequisites
 
 - Python 3.9+
-- `pip` package manager
-- `.env` file with required API keys and settings
+- Anthropic API key
 
-### Steps
+### Environment Setup
 
 1. Clone the repository:
+
    ```bash
-   git clone <repo-url>
-   cd resume-tailor-api
+   git clone https://github.com/your-username/wise-craft-server.git
+   cd wise-craft-server
    ```
+
 2. Create and activate a virtual environment:
+
    ```bash
    python -m venv venv
-   source venv/bin/activate  # macOS/Linux
-   venv\Scripts\activate     # Windows
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
+
 3. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
-4. Set up environment variables:
-   - Create a `.env` file in the root directory
-   - Add the required API key for Claude and other settings:
-     ```env
-     CLAUDE_API_KEY=your_api_key_here
-     ```
-5. Run the FastAPI server:
-   ```bash
-   uvicorn app.main:app --reload
+
+4. Create a `.env` file in the project root with the following variables:
    ```
-6. Access the API documentation:
-   - Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-   - ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+   CLAUDE_API_KEY=your_anthropic_api_key
+   ```
 
-## API Endpoints
+### Running the Application
 
-### Health Check
+Start the FastAPI application:
 
-- **GET** `/health`
-- Returns `{ "status": "healthy" }`
+```bash
+uvicorn app.main:app --reload
+```
 
-### Resume Tailoring
+The API will be available at http://localhost:8000.
 
-- **POST** `/api/v1/generation/cv-suggestions`
-- **Request Body**:
-  ```json
-  {
-    "raw_job_html_content": "<job description HTML>",
-    "resume_doc": {
-      "base64_content": "<base64 encoded resume>",
-      "file_type": "application/pdf",
-      "name": "resume.pdf"
-    },
-    "supporting_docs": [
-      {
-        "base64_content": "<base64 encoded document>",
-        "file_type": "text/plain",
-        "name": "cover_letter.txt"
-      }
-    ]
-  }
-  ```
-- **Response**:
-  ```json
-  {
-    "resume_suggestions": [
-      {
-        "where": "Experience section",
-        "suggestion": "Add quantifiable achievements in your role at XYZ Corp",
-        "reason": "This strengthens alignment with job requirements."
-      }
-    ],
-    "cover_letter": "Full generated cover letter text"
-  }
-  ```
+## API Documentation
+
+FastAPI automatically generates interactive API documentation:
+
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## Development
+
+### Adding New Features
+
+1. Define new models in the `app/models` directory
+2. Add service functions in `app/services`
+3. Create new endpoints in `app/routes`
+
+### Error Handling
+
+The application uses custom exceptions defined in `app/custom_exceptions.py` for consistent error handling across the API. Main exception types:
+
+- `GeneralServerError`: For general 500 server errors
+- `FileTypeNotSupportedError`: For unsupported document formats
+- `NoneJobSiteError`: When a provided page is not a job posting
+
+## Document Processing
+
+The server supports the following document formats:
+
+- PDF (application/pdf)
+- Word Documents (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+- Plain Text (text/plain)
+
+Documents are uploaded by the client as base64-encoded strings and processed using the appropriate library based on file type.
+
+## AI Integration
+
+The application uses Anthropic's Claude models with carefully crafted prompts to generate high-quality, contextually relevant content. The models are configured in `app/constants.py` and currently default to using Claude 3.5 Haiku.
+
+## Security Considerations
+
+- **CORS**: The application is configured to accept requests from authorized origins
+- **Input Validation**: All input is validated using Pydantic models
+- **Error Handling**: Custom exceptions provide secure error responses
 
 ## Environment Variables
 
-| Variable        | Description                          |
-| --------------- | ------------------------------------ |
-| CLAUDE_API_KEY  | API key for Anthropic Claude service |
-| ALLOWED_ORIGINS | CORS settings for allowed origins    |
-
-## Contribution
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes and push to your fork
-4. Open a pull request
+| Variable          | Description                  | Default                            |
+| ----------------- | ---------------------------- | ---------------------------------- |
+| `CLAUDE_API_KEY`  | Anthropic API key (required) | None                               |
+| `ALLOWED_ORIGINS` | CORS allowed origins         | ["*"] (all origins in development) |
 
 ## License
 
-MIT License. See `LICENSE` for details.
+This project is licensed under the [MIT License](LICENSE).
