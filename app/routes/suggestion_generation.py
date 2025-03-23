@@ -8,6 +8,8 @@ from app.services.suggestion_generation import (
     generate_cover_letter_handler,
 )
 from fastapi import Body
+from app.models.application_question import ApplicationQuestionAnswerRequestInputs, ApplicationQuestionAnswerResponse
+from app.services.suggestion_generation import generate_application_question_answer_handler
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/generation", tags=["generation"])
@@ -34,5 +36,18 @@ async def generate_cover_letter(requestInputs: CoverLetterGenerationRequestInput
     print("/cover-letter/generate endpoint reached")
     result = await generate_cover_letter_handler(
         extracted_job_posting_details=requestInputs.extracted_job_posting_details, resume_doc=requestInputs.resume_doc
+    )
+    return result
+
+
+@router.post("/application-question/answer", response_model=ApplicationQuestionAnswerResponse)
+async def generate_application_question_answer(requestInputs: ApplicationQuestionAnswerRequestInputs = Body(...)):
+    print("/application-question/answer endpoint reached")
+    result = await generate_application_question_answer_handler(
+        extracted_job_posting_details=requestInputs.extracted_job_posting_details,
+        resume_doc=requestInputs.resume_doc,
+        question=requestInputs.question,
+        additional_requirements=requestInputs.additional_requirements,
+        supporting_docs=requestInputs.supporting_docs,
     )
     return result

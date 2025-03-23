@@ -4,7 +4,9 @@ from app.models.job_posting_eval import JobPostingEvalResultResponse, ExtractedJ
 from app.models.resume_suggestions import ResumeSuggestionsResponse, ResumeSuggestion
 from app.models.cover_letter import CoverLetterGenerationResponse
 from app.models.uploaded_doc import UploadedDocument
+from app.models.application_question import ApplicationQuestionAnswerResponse
 from app.custom_exceptions import NoneJobSiteError
+from typing import Optional, List
 
 from app.utils.claude_handler.claude_prompts import (
     html_eval_system_prompt,
@@ -13,6 +15,8 @@ from app.utils.claude_handler.claude_prompts import (
     cover_letter_gen_user_prompt,
     resume_suggestion_gen_system_prompt,
     resume_suggestion_gen_user_prompt,
+    application_question_system_prompt,
+    application_question_user_prompt,
 )
 from app.utils.claude_handler.claude_config_apis import claude_message_api
 from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
@@ -226,4 +230,86 @@ async def generate_cover_letter_handler(
         print(f"Error occurred when generating cover letter: {str(e)}")
         raise GeneralServerError(
             error_detail_message="The AI Model experiencing high demand while while generating cover letter for you. Please retry later"
+        )
+
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+
+async def generate_application_question_answer_handler(
+    extracted_job_posting_details: ExtractedJobPostingDetails,
+    resume_doc: UploadedDocument,
+    question: str,
+    additional_requirements: Optional[str] = None,
+    supporting_docs: Optional[List[UploadedDocument]] = None,
+) -> ApplicationQuestionAnswerResponse:
+    print("generate_application_question_answer_handler runs")
+    print("target llm:", TARGET_LLM_MODEL)
+
+    # Prepare job details text
+    extracted_job_posting_details_text = f"""
+    Job Title: {extracted_job_posting_details.job_title}
+    Company name: {extracted_job_posting_details.company_name}
+    Location: {extracted_job_posting_details.location}
+    
+    Job Description:
+    {extracted_job_posting_details.job_description}
+    
+    Responsibilities:
+    {extracted_job_posting_details.responsibilities}
+    
+    Requirements:
+    {extracted_job_posting_details.requirements}
+    
+    Other additional Details:
+    {extracted_job_posting_details.other_additional_details}
+    """
+
+    # Prepare additional requirements text if provided
+    additional_requirements_text = ""
+    if additional_requirements:
+        additional_requirements_text = f"additional requirements to answer this question: {additional_requirements}"
+
+    system_prompt = application_question_system_prompt
+    user_prompt = application_question_user_prompt.format(question=question, additional_requirements_text=additional_requirements_text)
+
+    # Prepare user prompt content blocks
+    # Add resume
+    user_prompt_content_blocks = [
+        {"type": "text", "text": "my base resume"},
+        prepare_document_for_claude(resume_doc),  # Handle resume with proper file type
+    ]
+
+    # Add other supporting docs if provided
+    if supporting_docs:
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context (if provided)"})
+        for doc in supporting_docs:
+            user_prompt_content_blocks.append(prepare_document_for_claude(doc))
+
+    # Add job detail posting content
+    user_prompt_content_blocks.append({"type": "text", "text": "Job posting details:"})
+    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_job_posting_details_text}"})
+
+    # Add user instruction with the application question
+    user_prompt_content_blocks.append({"type": "text", "text": user_prompt})
+
+    try:
+        llm_response = await claude_message_api(
+            model=TARGET_LLM_MODEL,
+            system_prompt=system_prompt,
+            messages=[{"role": "user", "content": user_prompt_content_blocks}],
+            temp=0.2,
+            max_tokens=4000,
+        )
+
+        # Parse the JSON response
+        llm_response_text_json = llm_response.content[0].text
+        response_dict = json.loads(llm_response_text_json, strict=False)
+
+        return ApplicationQuestionAnswerResponse(question=response_dict.get("question", question), answer=response_dict.get("answer", ""))
+
+    except Exception as e:
+        print(f"Error occurred when generating application question answer: {str(e)}")
+        raise GeneralServerError(
+            error_detail_message="The AI Model experienced high demand while generating your application question answer. Please retry later"
         )
