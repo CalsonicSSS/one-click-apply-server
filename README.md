@@ -1,10 +1,10 @@
-# Wise Craft Server
+# Ninja Craft Server
 
-Backend API service for the Wise Craft Chrome extension, providing AI-powered job application assistance using FastAPI and Anthropic's Claude models.
+Backend API service for the Ninja Craft Chrome extension, providing AI-powered job application assistance using FastAPI and Anthropic's Claude models.
 
 ## Overview
 
-This server provides the intelligence behind the Wise Craft Chrome extension, using Anthropic's Claude AI models to:
+This server provides the intelligence behind the Ninja Craft Chrome extension, using Anthropic's Claude AI models to:
 
 - Analyze job posting content
 - Generate tailored resume suggestions
@@ -69,8 +69,8 @@ The server exposes the following endpoints under the `/api/v1/generation` prefix
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/wise-craft-server.git
-   cd wise-craft-server
+   git clone https://github.com/your-username/Ninja-craft-server.git
+   cd Ninja-craft-server
    ```
 
 2. Create and activate a virtual environment:
