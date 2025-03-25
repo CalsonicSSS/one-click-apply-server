@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from app.services.payments import create_checkout_session, handle_stripe_webhook
-from app.db.database import get_or_create_user, consume_credit
-from fastapi import Body
 
 router = APIRouter()
 
+router = APIRouter(prefix="/payments", tags=["payments"])
 
 class CreateSessionRequest(BaseModel):
     browser_id: str
@@ -28,14 +27,3 @@ async def stripe_webhook(request: Request):
         raise HTTPException(status_code=400, detail="Missing stripe-signature header")
         
     return await handle_stripe_webhook(payload, signature)
-
-@router.post("/credits/consume")
-async def consume_credit_route(browser_id: str):
-    """Consume one credit from user's account."""
-    success = await consume_credit(browser_id)
-    if not success:
-        raise HTTPException(
-            status_code=402,
-            detail="Not enough credits. Please purchase more."
-        )
-    return {"status": "success"} 

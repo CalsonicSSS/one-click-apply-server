@@ -9,7 +9,6 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 async def create_checkout_session(browser_id: str, package: str) -> dict:
-    print(f"Creating checkout session for browser_id: {browser_id} and package: {package}")
     """Create a Stripe checkout session for credit purchase."""
     if package not in CREDITS_PACKAGES:
         raise HTTPException(status_code=400, detail="Invalid package selected")

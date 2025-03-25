@@ -25,7 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(suggestion_generation_router, prefix="/api/v1")
-app.include_router(payments_router, prefix="/api/v1/payments")
+app.include_router(payments_router, prefix="/api/v1")
 app.include_router(users_router, prefix="/api/v1")
 
 
