@@ -30,7 +30,7 @@ from functools import lru_cache
 # CORS is designed to enforce security at the domain level
 # why CORS happens:
 # Modern web applications are often built with a decoupled architecture. where the frontend (UI) and backend (API) are developed and deployed independently.
-# When a user navigates to the frontend (e.g., https://frontend.com), When the frontend needs data, it sends requests to the backend’s domain (e.g., https://backend.com/api/data).
+# When a user navigates to the frontend (e.g., https://frontend.com), When the frontend needs data, it sends requests to the backend's domain (e.g., https://backend.com/api/data).
 # Since the backend domain is different from the frontend domain, this is a cross-origin request, and CORS is triggered.
 
 
@@ -40,6 +40,19 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     CLAUDE_API_KEY: str
     ALLOWED_ORIGINS: list = ["*"]  # For development, allow all origins
+    
+    # MongoDB settings
+    MONGO_URI: str = "mongodb://localhost:27017"
+    MONGO_DB_NAME: str = "resume-browser"
+    
+    # Stripe settings
+    STRIPE_SECRET_KEY: str
+    STRIPE_WEBHOOK_SECRET: str
+    STRIPE_PRICE_25_CREDITS: str  # Price ID for 25 credits package
+    STRIPE_PRICE_65_CREDITS: str  # Price ID for 65 credits package
+    
+    # Platform fee percentage (10%)
+    PLATFORM_FEE_PERCENTAGE: float = 0.10
 
     # we use this Config class here as a nested class to further configure the "Settings" class (This is the pydantic feature)
     class Config:
