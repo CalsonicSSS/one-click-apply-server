@@ -204,11 +204,11 @@ Question: {question}
 {additional_requirements_text}
 
 Your answer should:
-- Be specifically tailored to this question and its intention based on this job posting context and company details (critical).
-- Try to answer with passion and friendly tone (not too professional) and leverage my background context (resume and other additional context) I provided here for the answer when possible.
-- Be authentic and be LESS of AI and professional sounds, it will too fake to notice if its AI generated.
-- concise response.
-- Follow any specific additional_requirements_text if I have any from above (if any)
+- Be specific / tailored to this question and its intention based on the job posting context and any background details (critical).
+- Try to answer with passion and friendly tone (Not professional), and leverage my background context (resume and other additional context) I provided here for the answer when possible.
+- Be authentic and humanize your response to make it look real but NOT AI Generated sound.
+- Be concise about your response as this is aim for short answer form inputs (unless additional requirement state otherwise).
+- Follow any specific additional_requirements_text if I have any from above (if any).
 
 Please provide only the final answer in a format that I can directly copy and paste into the application form text input.
 

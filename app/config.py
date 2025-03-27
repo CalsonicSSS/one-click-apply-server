@@ -2,8 +2,7 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 
-# note here, this is not pydantic's BaseModel, but a BaseSetting it extends to.
-# This is a subclass of BaseModel specifically designed for configuration management. It adds features like:
+# BaseSetting is a subclass of BaseModel specifically designed for configuration management. It adds features like:
 # 1. Automatically loading environment variables.
 # 2. Supporting .env files for environment variable loading.
 # 3. Providing default values for configuration fields.
@@ -30,7 +29,7 @@ from functools import lru_cache
 # CORS is designed to enforce security at the domain level
 # why CORS happens:
 # Modern web applications are often built with a decoupled architecture. where the frontend (UI) and backend (API) are developed and deployed independently.
-# When a user navigates to the frontend (e.g., https://frontend.com), When the frontend needs data, it sends requests to the backend’s domain (e.g., https://backend.com/api/data).
+# When a user navigates to the frontend (e.g., https://frontend.com), when it sends requests to the backend’s domain (e.g., https://backend.com/api/data).
 # Since the backend domain is different from the frontend domain, this is a cross-origin request, and CORS is triggered.
 
 

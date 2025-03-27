@@ -186,12 +186,12 @@ async def generate_cover_letter_handler(
     user_prompt_content_blocks = [
         {"type": "text", "text": "my base resume"},
         prepare_document_for_claude(resume_doc),
-        {"type": "text", "text": "my additional professional context (if provided)"},
     ]
 
     # add other supporting docs
     if supporting_docs:
         for doc in supporting_docs:
+            {"type": "text", "text": "my additional professional context"},
             user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
     # add job detail posting content
@@ -282,7 +282,7 @@ async def generate_application_question_answer_handler(
 
     # Add other supporting docs if provided
     if supporting_docs:
-        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context (if provided)"})
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context"})
         for doc in supporting_docs:
             user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
