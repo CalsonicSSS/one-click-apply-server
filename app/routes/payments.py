@@ -1,15 +1,8 @@
 from fastapi import APIRouter, Request, HTTPException
-from pydantic import BaseModel
+from app.models.payment import CreateSessionRequest
 from app.services.payments import create_checkout_session, handle_stripe_webhook
 
-router = APIRouter()
-
 router = APIRouter(prefix="/payments", tags=["payments"])
-
-class CreateSessionRequest(BaseModel):
-    browser_id: str
-    package: str
-
 
 @router.post("/create-session")
 async def create_session(request: CreateSessionRequest):

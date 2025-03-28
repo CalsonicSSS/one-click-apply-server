@@ -52,7 +52,7 @@ async def update_user_credits(browser_id: str, credits_to_add: int) -> dict:
         },
         return_document=True
     )
-    return result
+    return User(browser_id=browser_id, credits=result["credits"])
 
 async def consume_credit(browser_id: str) -> bool:
     """

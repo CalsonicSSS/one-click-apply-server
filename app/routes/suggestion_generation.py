@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from app.custom_exceptions import NotEnoughCreditsError
 from app.models.job_posting_eval import JobPostingEvalRequestInputs, JobPostingEvalResultResponse
 from app.models.resume_suggestions import ResumeSuggestionGenerationRequestInputs, ResumeSuggestionsResponse
 from app.models.cover_letter import CoverLetterGenerationRequestInputs, CoverLetterGenerationResponse
@@ -23,9 +24,8 @@ async def evaluate_job_posting_html_content(
     print("/job-posting/evaluate endpoint reached")
     # Consume credit before processing
     if not await consume_credit(requestInputs.browser_id):
-        raise HTTPException(    
-            status_code=402,
-            detail="Not enough credits. Please purchase more."
+        raise NotEnoughCreditsError(
+            error_detail_message="Not enough credits. Please purchase more."
         )
     result = await evaluate_job_posting_html_content_handler(
         raw_html_content=requestInputs.raw_job_html_content
@@ -38,12 +38,6 @@ async def generate_resume_suggestions(
     requestInputs: ResumeSuggestionGenerationRequestInputs = Body(...),
 ):
     print("/resume/suggestions-generate endpoint reached")
-    # Consume credit before processing
-    if not await consume_credit(requestInputs.browser_id):
-        raise HTTPException(
-            status_code=402,
-            detail="Not enough credits. Please purchase more."
-        )
     result = await generate_resume_suggestions_handler(
         extracted_job_posting_details=requestInputs.extracted_job_posting_details,
         resume_doc=requestInputs.resume_doc
@@ -56,12 +50,6 @@ async def generate_cover_letter(
     requestInputs: CoverLetterGenerationRequestInputs = Body(...),
 ):
     print("/cover-letter/generate endpoint reached")
-    # Consume credit before processing
-    if not await consume_credit(requestInputs.browser_id):
-        raise HTTPException(
-            status_code=402,
-            detail="Not enough credits. Please purchase more."
-        )
     result = await generate_cover_letter_handler(
         extracted_job_posting_details=requestInputs.extracted_job_posting_details,
         resume_doc=requestInputs.resume_doc
@@ -74,12 +62,6 @@ async def generate_application_question_answer(
     requestInputs: ApplicationQuestionAnswerRequestInputs = Body(...),
 ):
     print("/application-question/answer endpoint reached")
-    # Consume credit before processing
-    if not await consume_credit(requestInputs.browser_id):
-        raise HTTPException(
-            status_code=402,
-            detail="Not enough credits. Please purchase more."
-        )
     result = await generate_application_question_answer_handler(
         extracted_job_posting_details=requestInputs.extracted_job_posting_details,
         resume_doc=requestInputs.resume_doc,

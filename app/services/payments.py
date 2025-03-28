@@ -1,6 +1,7 @@
 import stripe
 from fastapi import HTTPException
 from app.config import get_settings
+from app.custom_exceptions import InvalidPackageError
 from app.db.database import update_user_credits
 from app.constants import CREDITS_PACKAGES
 
@@ -11,7 +12,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 async def create_checkout_session(browser_id: str, package: str) -> dict:
     """Create a Stripe checkout session for credit purchase."""
     if package not in CREDITS_PACKAGES:
-        raise HTTPException(status_code=400, detail="Invalid package selected")
+        raise InvalidPackageError(error_detail_message="Invalid package selected")
 
     package_info = CREDITS_PACKAGES[package]
     price_amount = int(package_info["price"] * 100)  # Convert to cents
@@ -24,7 +25,7 @@ async def create_checkout_session(browser_id: str, package: str) -> dict:
                     "currency": "usd",
                     "product_data": {
                         "name": f"{package} Credits Package",
-                        "description": f"Purchase {package} credits for Resume Tailor Assistant"
+                        "description": f"Purchase {package} credits for Ninja Craft"
                     },
                     "unit_amount": price_amount,
                 },
