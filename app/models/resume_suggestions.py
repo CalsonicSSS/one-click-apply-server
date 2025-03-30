@@ -7,6 +7,7 @@ from app.models.uploaded_doc import UploadedDocument
 class ResumeSuggestionGenerationRequestInputs(BaseModel):
     extracted_job_posting_details: ExtractedJobPostingDetails
     resume_doc: UploadedDocument
+    browser_id: str
 
 
 # ----------------------------------------------------------

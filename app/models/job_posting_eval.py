@@ -4,6 +4,7 @@ from typing import Optional, List
 
 class JobPostingEvalRequestInputs(BaseModel):
     raw_job_html_content: str
+    browser_id: str
 
 
 # ------------------------------------------------

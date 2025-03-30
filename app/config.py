@@ -39,6 +39,19 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     CLAUDE_API_KEY: str
     ALLOWED_ORIGINS: list = ["*"]  # For development, allow all origins
+    
+    # MongoDB settings
+    MONGO_URI: str = "mongodb://localhost:27017"
+    MONGO_DB_NAME: str = "resume-browser"
+    
+    # Stripe settings
+    STRIPE_SECRET_KEY: str
+    STRIPE_WEBHOOK_SECRET: str
+    STRIPE_PRICE_25_CREDITS: str  # Price ID for 25 credits package
+    STRIPE_PRICE_65_CREDITS: str  # Price ID for 65 credits package
+    
+    # Platform fee percentage (10%)
+    PLATFORM_FEE_PERCENTAGE: float = 0.10
 
     # we use this Config class here as a nested class to further configure the "Settings" class (This is the pydantic feature)
     class Config:
