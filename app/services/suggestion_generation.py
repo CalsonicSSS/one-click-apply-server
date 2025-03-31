@@ -7,6 +7,7 @@ from app.models.uploaded_doc import UploadedDocument
 from app.models.application_question import ApplicationQuestionAnswerResponse
 from app.custom_exceptions import NoneJobSiteError
 from typing import Optional, List
+import re
 
 from app.utils.claude_handler.claude_prompts import (
     html_eval_system_prompt,
@@ -206,9 +207,7 @@ async def generate_cover_letter_handler(
 
     # add user instruction
     user_prompt_content_blocks.append({"type": "text", "text": cover_letter_gen_user_prompt})
-
     try:
-
         llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL,
             system_prompt=system_prompt,
@@ -217,9 +216,35 @@ async def generate_cover_letter_handler(
             max_tokens=4000,
         )
 
-        # based on the prompt, this will return a response in JSON format
-        llm_response_text = llm_response.content[0].text  # this is a text in json format
-        response_dict = json.loads(llm_response_text, strict=False)
+        llm_response_text = llm_response.content[0].text
+
+        try:
+            # Try to fix potential JSON issues before parsing
+            llm_response_text_json = llm_response_text.strip()
+            # Handle case where model might return markdown JSON block
+            if llm_response_text_json.startswith("```json") and llm_response_text_json.endswith("```"):
+                llm_response_text_json = llm_response_text_json.removeprefix("```json").removesuffix("```").strip()
+
+            # Use json.loads with more tolerant error handling
+            response_dict = json.loads(llm_response_text_json)
+
+        except json.JSONDecodeError as json_err:
+            print(f"JSON parsing error: {str(json_err)}")
+
+            # Extract cover letter and applicant name using regex if JSON parsing fails
+            cover_letter_match = re.search(r'"cover_letter"\s*:\s*"(.*?)(?:"|$)', llm_response_text, re.DOTALL)
+            cover_letter = cover_letter_match.group(1) if cover_letter_match else ""
+
+            applicant_match = re.search(r'"applicant_name"\s*:\s*"(.*?)(?:"|$)', llm_response_text)
+            applicant_name = applicant_match.group(1) if applicant_match else ""
+
+            return CoverLetterGenerationResponse(
+                cover_letter=cover_letter,
+                applicant_name=applicant_name,
+                company_name=extracted_job_posting_details.company_name,
+                job_title_name=extracted_job_posting_details.job_title,
+                location=extracted_job_posting_details.location,
+            )
 
         cover_letter = response_dict.get("cover_letter", "")
         applicant_name = response_dict.get("applicant_name", "")
@@ -235,7 +260,7 @@ async def generate_cover_letter_handler(
     except Exception as e:
         print(f"Error occurred when generating cover letter: {str(e)}")
         raise GeneralServerError(
-            error_detail_message="The AI Model experiencing high demand while while generating cover letter for you. Please retry later"
+            error_detail_message="The AI Model is experiencing high demand while generating your cover letter. Please retry later."
         )
 
 

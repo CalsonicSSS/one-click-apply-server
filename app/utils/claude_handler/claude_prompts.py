@@ -168,14 +168,14 @@ Based on the given job posting detail and utilize all my provided professional b
 - Make sure to fully utilize key points and experiences from my base resume and any other supporting docs if available as base for generating **Main Content** (MUST)
 - Make sure the length fill up to whole one-page length 
 
-**Output requirements**:
+**Output requirements** (VERY IMPORTANT):
 - Ensure your response is a pure and proper JSON structure as outlined below, without additional data.
 - The structure includes: "applicant_name" and "cover_letter" as fields.
-- Ensure your final output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` in Python later (MUST).
+- Ensure your final text output is properly formatted, with all special characters correctly escaped and handled properly, making it valid for `json.loads()` call in Python later (MUST).
 
 {{
     "applicant_name": "my name (in the format 'first name_last name')",
-    "cover_letter": "Full formatted text content of the tailored cover letter following above structures and rules, HANDLE ALL special and control characters correctly"
+    "cover_letter": "Full formatted text content of the tailored cover letter, HANDLE ALL special and control characters correctly and escape them all"
 }}
 """
 
@@ -214,7 +214,7 @@ Please provide only the final answer in a format that I can directly copy and pa
 
 Output requirements:
 - Ensure your response is a pure JSON structure as outlined below, without additional data.
-- Ensure the text output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` in Python.
+- Ensure your final text output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` call in Python later .
 
 {{
     "question": "The original question I asked",
