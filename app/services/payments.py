@@ -16,32 +16,27 @@ async def create_checkout_session(browser_id: str, package: str) -> dict:
 
     package_info = CREDITS_PACKAGES[package]
     price_amount = int(package_info["price"] * 100)  # Convert to cents
-    
+
     try:
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
-            line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {
-                        "name": f"{package} Credits Package",
-                        "description": f"Purchase {package} credits for Ninja Craft"
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {"name": f"{package} Credits Package", "description": f"Purchase {package} credits for Ninja Craft"},
+                        "unit_amount": price_amount,
                     },
-                    "unit_amount": price_amount,
-                },
-                "quantity": 1,
-            }],
+                    "quantity": 1,
+                }
+            ],
             mode="payment",
             success_url="https://your-extension-url/success",  # Update with actual URL
-            cancel_url="https://your-extension-url/cancel",    # Update with actual URL
-            metadata={
-                "browser_id": browser_id,
-                "package": package,
-                "credits": str(package_info["credits"])
-            },
+            cancel_url="https://your-extension-url/cancel",  # Update with actual URL
+            metadata={"browser_id": browser_id, "package": package, "credits": str(package_info["credits"])},
         )
         return {"session_id": session.id, "url": session.url}
-        
+
     except stripe.error.StripeError as e:
         print(f"Stripe error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -50,20 +45,16 @@ async def create_checkout_session(browser_id: str, package: str) -> dict:
 async def handle_stripe_webhook(payload: bytes, signature: str) -> dict:
     """Handle Stripe webhook events."""
     try:
-        event = stripe.Webhook.construct_event(
-            payload,
-            signature,
-            settings.STRIPE_WEBHOOK_SECRET
-        )
+        event = stripe.Webhook.construct_event(payload, signature, settings.STRIPE_WEBHOOK_SECRET)
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid webhook signature")
-        
+
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         browser_id = session["metadata"]["browser_id"]
         credits = int(session["metadata"]["credits"])
-        
+
         # Update user credits in database
         await update_user_credits(browser_id, credits)
-        
-    return {"status": "success"} 
+
+    return {"status": "success"}

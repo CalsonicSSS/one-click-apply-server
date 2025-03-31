@@ -10,7 +10,6 @@ class ApplicationQuestionAnswerRequestInputs(BaseModel):
     question: str
     additional_requirements: Optional[str] = None
     supporting_docs: Optional[List[UploadedDocument]] = None
-    browser_id: str
 
 
 class ApplicationQuestionAnswerResponse(BaseModel):

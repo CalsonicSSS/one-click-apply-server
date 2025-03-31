@@ -18,9 +18,11 @@ class NoneJobSiteError(HTTPException):
     def __init__(self, error_detail_message: str):
         super().__init__(status_code=400, detail=error_detail_message)
 
+
 class NotEnoughCreditsError(HTTPException):
     def __init__(self, error_detail_message: str):
         super().__init__(status_code=402, detail=error_detail_message)
+
 
 class InvalidPackageError(HTTPException):
     def __init__(self, error_detail_message: str):

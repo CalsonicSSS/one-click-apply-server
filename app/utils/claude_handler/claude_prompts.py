@@ -164,18 +164,18 @@ Based on the given job posting detail and utilize all my provided professional b
 - **sign_off:**  "Sincerely," 
 - **signature:** "First_Name Last_Name"
 
-**Additional requirements**:
-- Make sure to fully utilize key points and experiences from my base resume and any other supporting docs (base cover letter) if available as base for generating **Main Content** (MUST)
+**Cover letter generation requirements**:
+- Make sure to fully utilize key points and experiences from my base resume and any other supporting docs if available as base for generating **Main Content** (MUST)
 - Make sure the length fill up to whole one-page length 
 
 **Output requirements**:
-- Ensure your response is a pure JSON structure as outlined below, without additional data.
+- Ensure your response is a pure and proper JSON structure as outlined below, without additional data.
 - The structure includes: "applicant_name" and "cover_letter" as fields.
-- Ensure the text output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` in Python.
+- Ensure your final output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` in Python later (MUST).
 
 {{
     "applicant_name": "my name (in the format 'first name_last name')",
-    "cover_letter": "Full formatted text content of the tailored cover letter following above structures and rules"
+    "cover_letter": "Full formatted text content of the tailored cover letter following above structures and rules, HANDLE ALL special and control characters correctly"
 }}
 """
 

@@ -44,10 +44,10 @@ async def evaluate_job_posting_html_content_handler(raw_html_content: str) -> Jo
         )
 
         # based on the prompt, this will return a response in JSON format
-        llm_response_text_json = llm_response.content[0].text
+        llm_response_text = llm_response.content[0].text
 
         # to convert the JSON string to a actual Python dictionary
-        response_dict = json.loads(llm_response_text_json, strict=False)
+        response_dict = json.loads(llm_response_text, strict=False)
 
         if response_dict["is_job_posting"]:
             return JobPostingEvalResultResponse(
@@ -81,7 +81,7 @@ async def evaluate_job_posting_html_content_handler(raw_html_content: str) -> Jo
 
 
 async def generate_resume_suggestions_handler(
-    extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument
+    extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> ResumeSuggestionsResponse:
     print("generate_resume_suggestions_handler runs")
     print("target llm:", TARGET_LLM_MODEL)
@@ -114,6 +114,12 @@ async def generate_resume_suggestions_handler(
         prepare_document_for_claude(resume_doc),  # Handle resume with proper file type
     ]
 
+    # add other supporting docs
+    if supporting_docs:
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context:"})
+        for doc in supporting_docs:
+            user_prompt_content_blocks.append(prepare_document_for_claude(doc))
+
     # add job detail posting content
     user_prompt_content_blocks.append({"type": "text", "text": "Job posting details:"})
     user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_job_posting_details_text}"})
@@ -132,8 +138,8 @@ async def generate_resume_suggestions_handler(
         )
 
         # based on the prompt, this will return a response in JSON format
-        llm_response_text_json = llm_response.content[0].text
-        response_dict = json.loads(llm_response_text_json, strict=False)
+        llm_response_text = llm_response.content[0].text
+        response_dict = json.loads(llm_response_text, strict=False)
 
         resume_suggestions = [
             ResumeSuggestion(where=sugg.get("where", ""), suggestion=sugg.get("suggestion", ""), reason=sugg.get("reason", ""))
@@ -184,14 +190,14 @@ async def generate_cover_letter_handler(
     # Prepare user prompt content blocks
     # add resume
     user_prompt_content_blocks = [
-        {"type": "text", "text": "my base resume"},
+        {"type": "text", "text": "my base resume:"},
         prepare_document_for_claude(resume_doc),
     ]
 
     # add other supporting docs
     if supporting_docs:
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context:"})
         for doc in supporting_docs:
-            {"type": "text", "text": "my additional professional context"},
             user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
     # add job detail posting content
@@ -212,18 +218,18 @@ async def generate_cover_letter_handler(
         )
 
         # based on the prompt, this will return a response in JSON format
-        llm_response_text_json = llm_response.content[0].text
-        response_dict = json.loads(llm_response_text_json, strict=False)
+        llm_response_text = llm_response.content[0].text  # this is a text in json format
+        response_dict = json.loads(llm_response_text, strict=False)
 
         cover_letter = response_dict.get("cover_letter", "")
         applicant_name = response_dict.get("applicant_name", "")
 
         return CoverLetterGenerationResponse(
             cover_letter=cover_letter,
+            applicant_name=applicant_name,
             company_name=extracted_job_posting_details.company_name,
             job_title_name=extracted_job_posting_details.job_title,
             location=extracted_job_posting_details.location,
-            applicant_name=applicant_name,
         )
 
     except Exception as e:
@@ -282,7 +288,7 @@ async def generate_application_question_answer_handler(
 
     # Add other supporting docs if provided
     if supporting_docs:
-        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context"})
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context:"})
         for doc in supporting_docs:
             user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
@@ -303,8 +309,8 @@ async def generate_application_question_answer_handler(
         )
 
         # Parse the JSON response
-        llm_response_text_json = llm_response.content[0].text
-        response_dict = json.loads(llm_response_text_json, strict=False)
+        llm_response_text = llm_response.content[0].text
+        response_dict = json.loads(llm_response_text, strict=False)
 
         return ApplicationQuestionAnswerResponse(question=response_dict.get("question", question), answer=response_dict.get("answer", ""))
 

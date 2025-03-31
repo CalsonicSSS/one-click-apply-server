@@ -8,7 +8,6 @@ class CoverLetterGenerationRequestInputs(BaseModel):
     extracted_job_posting_details: ExtractedJobPostingDetails
     resume_doc: UploadedDocument
     supporting_docs: Optional[List[UploadedDocument]] = None
-    browser_id: str
 
 
 # ----------------------------------------------------------
