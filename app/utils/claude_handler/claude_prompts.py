@@ -25,7 +25,7 @@ Remember to carefully extract job details from the HTML content, including:
 Be thorough but ensure your response is ONLY the JSON object itself.
 """
 
-job_post_evaltract_user_prompt = """
+job_post_evaltract_user_prompt_template = """
 Below is the job posting site raw content:
 {raw_content}
 
@@ -54,9 +54,9 @@ If it is a proper single job posting detail site, first extract all relevant pos
 }}
 
 VERY IMPORTANT OUTPUT RULES: 
-1. Your entire response must be ONLY the JSON shown above with the appropriate fields filled in.
-2. Do not include any other explanations, markdown formatting, or additional text before or after the JSON.
-3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines.
+1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
+2. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON.
+3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 4. If any field isn't found from job posting raw content, use an empty string "" or empty array [] as appropriate.
 """
 
@@ -107,9 +107,9 @@ Based on the given job posting detail and my resume and other professional conte
 }}
 
 VERY IMPORTANT OUTPUT RULES: 
-1. Your entire response must be ONLY the JSON shown above with the appropriate fields filled in.
-2. Do not include any other explanations, markdown formatting, or additional text before or after the JSON.
-3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines etc.
+1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
+2. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON.
+3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 """
 
 
@@ -158,10 +158,9 @@ Based on the given job posting detail and utilize all my provided professional b
 }}
 
 VERY IMPORTANT OUTPUT RULES: 
-1. Your entire response must be ONLY the JSON shown above with the appropriate fields filled in.
-2. Do not include any other explanations, markdown formatting, or additional content before or after the JSON.
-3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines etc.
-4. Make it valid for `json.loads()` call in Python later (MUST)
+1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
+2. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON.
+3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -182,13 +181,13 @@ Your goal is to create an answer that will make the applicant stand out positive
 """
 
 
-application_question_user_prompt = """
+application_question_user_prompt_template = """
 Based on all the information I've provided (my resume, the job posting details, and any additional context), please help me craft a strong, tailored 
 answer to the following job application question:
 
 Question: {question}
 
-additional_requirements:
+additional_requirements to answer this question:
 {additional_requirements_text}
 
 Your answer should:
@@ -196,7 +195,7 @@ Your answer should:
 - Try to answer with passion and friendly tone (Not professional), and leverage my background context (resume and other additional context) I provided here for the answer when possible.
 - Be authentic and humanize your response to make it look real but NOT AI Generated sound.
 - Be concise about your response as this is aim for short answer form inputs (unless additional requirement state otherwise).
-- Follow my additional_requirements if I have as priority (if there is any) for answer this question.
+- Follow my additional_requirements if I have as priority for answer this question (if there is any).
 
 {{
     "question": "The original question I asked",
@@ -204,8 +203,7 @@ Your answer should:
 }}
 
 VERY IMPORTANT OUTPUT RULES: 
-1. Your entire response must be ONLY the JSON shown above with the appropriate fields filled in.
-2. Do not include any other explanations, markdown formatting, or additional content before or after the JSON.
-3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines etc.
-4. Make it valid for `json.loads()` call in Python later (MUST)
+1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
+2. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON.
+3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 """

@@ -1,81 +1,51 @@
-import json
 import traceback
 from app.models.job_posting_eval import JobPostingEvalResultResponse, ExtractedJobPostingDetails
 from app.models.resume_suggestions import ResumeSuggestionsResponse, ResumeSuggestion
 from app.models.cover_letter import CoverLetterGenerationResponse
 from app.models.uploaded_doc import UploadedDocument
 from app.models.application_question import ApplicationQuestionAnswerResponse
-from app.custom_exceptions import NoneJobSiteError
+from app.custom_exceptions import NoneJobSiteError, GeneralServerError, NotEnoughCreditsError, LLMResponseParsingError
 from typing import Optional, List
-import re
 
 from app.utils.claude_handler.claude_prompts import (
-    job_post_evaltract_user_prompt,
+    job_post_evaltract_user_prompt_template,
     job_post_evaltract_system_prompt,
     cover_letter_gen_system_prompt,
     cover_letter_gen_user_prompt,
     resume_suggestion_gen_system_prompt,
     resume_suggestion_gen_user_prompt,
     application_question_system_prompt,
-    application_question_user_prompt,
+    application_question_user_prompt_template,
 )
 from app.utils.claude_handler.claude_config_apis import claude_message_api
 from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
-from app.custom_exceptions import GeneralServerError
 from app.constants import TARGET_LLM_MODEL
-from app.custom_exceptions import NotEnoughCreditsError
 from app.db.database import consume_credit
+from app.utils.data_parsing import parse_llm_json_response
 
 
 async def evaluate_job_posting_html_content_handler(raw_content: str, browser_id: str) -> JobPostingEvalResultResponse:
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL)
 
-    system_prompt = job_post_evaltract_system_prompt
-    user_prompt = job_post_evaltract_user_prompt.format(raw_content=raw_content)
+    job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
 
     try:
         llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL,
-            system_prompt=system_prompt,
-            messages=[{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],
+            system_prompt=job_post_evaltract_system_prompt,
+            messages=[{"role": "user", "content": [{"type": "text", "text": job_post_evaltract_user_prompt}]}],
             temp=0,
             max_tokens=4000,
         )
 
-        # based on the prompt, this will return a response in JSON format
+        # Get the response text from Claude
         llm_response_text = llm_response.content[0].text
 
-        # Clean up the response to ensure it's valid JSON
-        # Extract just the JSON part using regex to find content between curly braces
-        json_match = re.search(r"({[\s\S]*})", llm_response_text)
-        if json_match:
-            cleaned_json = json_match.group(1)
-        else:
-            cleaned_json = llm_response_text
+        # Parse the response using our utility function
+        response_dict = parse_llm_json_response(llm_response_text)
 
-        try:
-            # First attempt with standard json parsing
-            response_dict = json.loads(cleaned_json, strict=False)
-        except json.JSONDecodeError:
-            # Fallback: more aggressive cleanup if standard parsing fails
-            # Remove any non-JSON content before or after the main JSON object
-
-            # Find the outermost JSON object
-            match = re.search(r"({[\s\S]*})", cleaned_json)
-            if match:
-                cleaned_json = match.group(1)
-                # Try to fix common issues
-                cleaned_json = cleaned_json.replace("\n", " ").replace("\r", "")
-                # Handle potential trailing commas
-                cleaned_json = re.sub(r",\s*}", "}", cleaned_json)
-                cleaned_json = re.sub(r",\s*]", "]", cleaned_json)
-                # Try parsing again with a more lenient approach
-                response_dict = json.loads(cleaned_json, strict=False)
-            else:
-                raise ValueError("Could not extract valid JSON from LLM response")
-
-        # at this point, its safe to consume a user credit
+        # At this point, it's safe to consume a user credit
         if not await consume_credit(browser_id):
             raise NotEnoughCreditsError(error_detail_message="Not enough credits. Please purchase more.")
 
@@ -99,15 +69,15 @@ async def evaluate_job_posting_html_content_handler(raw_content: str, browser_id
     except NoneJobSiteError:
         print(traceback.format_exc())
         raise
-    except json.JSONDecodeError as e:
-        print(f"JSON decode error: {str(e)}")
-        print(f"Raw response: {llm_response_text}")
-        raise GeneralServerError(error_detail_message="The AI encountered an error while analyzing the job page. Please retry later.")
+    except NotEnoughCreditsError:
+        print(traceback.format_exc())
+        raise
+    except LLMResponseParsingError:
+        print(traceback.format_exc())
+        raise
     except Exception as e:
         print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(
-            error_detail_message="The AI Model experiencing high demand while analyzing the current job page. Please retry later"
-        )
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response for you. Please retry later")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -120,7 +90,7 @@ async def generate_resume_suggestions_handler(
     print("target llm:", TARGET_LLM_MODEL)
 
     # Prepare job details text
-    extracted_job_posting_details_text = f"""
+    extracted_full_job_posting_details_text = f"""
     Job Title: {extracted_job_posting_details.job_title}
     Company name: {extracted_job_posting_details.company_name}
     Location: {extracted_job_posting_details.location}
@@ -155,13 +125,12 @@ async def generate_resume_suggestions_handler(
 
     # add job detail posting content
     user_prompt_content_blocks.append({"type": "text", "text": "Job posting details:"})
-    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_job_posting_details_text}"})
+    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_full_job_posting_details_text}"})
 
     # add user instruction
     user_prompt_content_blocks.append({"type": "text", "text": resume_suggestion_gen_user_prompt})
 
     try:
-
         llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL,
             system_prompt=system_prompt,
@@ -170,9 +139,9 @@ async def generate_resume_suggestions_handler(
             max_tokens=4000,
         )
 
-        # based on the prompt, this will return a response in JSON format
+        # Parse the response using our utility function
         llm_response_text = llm_response.content[0].text
-        response_dict = json.loads(llm_response_text, strict=False)
+        response_dict = parse_llm_json_response(llm_response_text)
 
         resume_suggestions = [
             ResumeSuggestion(where=sugg.get("where", ""), suggestion=sugg.get("suggestion", ""), reason=sugg.get("reason", ""))
@@ -183,11 +152,12 @@ async def generate_resume_suggestions_handler(
             resume_suggestions=resume_suggestions,
         )
 
+    except LLMResponseParsingError:
+        print(traceback.format_exc())
+        raise
     except Exception as e:
-        print(f"Error occurred when generating resume suggestions: {str(e)}")
-        raise GeneralServerError(
-            error_detail_message="The AI Model experiencing high demand while while generating resume suggestions for you. Please retry later"
-        )
+        print(f"Error occur when evalute job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response for you. Please retry later")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -200,7 +170,7 @@ async def generate_cover_letter_handler(
     print("target llm:", TARGET_LLM_MODEL)
 
     # Prepare job details text
-    extracted_job_posting_details_text = f"""
+    extracted_full_job_posting_details_text = f"""
     Job Title: {extracted_job_posting_details.job_title}
     Company name: {extracted_job_posting_details.company_name}
     Location: {extracted_job_posting_details.location}
@@ -235,7 +205,7 @@ async def generate_cover_letter_handler(
 
     # add job detail posting content
     user_prompt_content_blocks.append({"type": "text", "text": "Job posting details:"})
-    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_job_posting_details_text}"})
+    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_full_job_posting_details_text}"})
 
     # add user instruction
     user_prompt_content_blocks.append({"type": "text", "text": cover_letter_gen_user_prompt})
@@ -248,52 +218,24 @@ async def generate_cover_letter_handler(
             max_tokens=4000,
         )
 
+        # Parse the response using our utility function
         llm_response_text = llm_response.content[0].text
-
-        try:
-            # Try to fix potential JSON issues before parsing
-            llm_response_text_json = llm_response_text.strip()
-            # Handle case where model might return markdown JSON block
-            if llm_response_text_json.startswith("```json") and llm_response_text_json.endswith("```"):
-                llm_response_text_json = llm_response_text_json.removeprefix("```json").removesuffix("```").strip()
-
-            # Use json.loads with more tolerant error handling
-            response_dict = json.loads(llm_response_text_json)
-
-        except json.JSONDecodeError as json_err:
-            print(f"JSON parsing error: {str(json_err)}")
-
-            # Extract cover letter and applicant name using regex if JSON parsing fails
-            cover_letter_match = re.search(r'"cover_letter"\s*:\s*"(.*?)(?:"|$)', llm_response_text, re.DOTALL)
-            cover_letter = cover_letter_match.group(1) if cover_letter_match else ""
-
-            applicant_match = re.search(r'"applicant_name"\s*:\s*"(.*?)(?:"|$)', llm_response_text)
-            applicant_name = applicant_match.group(1) if applicant_match else ""
-
-            return CoverLetterGenerationResponse(
-                cover_letter=cover_letter,
-                applicant_name=applicant_name,
-                company_name=extracted_job_posting_details.company_name,
-                job_title_name=extracted_job_posting_details.job_title,
-                location=extracted_job_posting_details.location,
-            )
-
-        cover_letter = response_dict.get("cover_letter", "")
-        applicant_name = response_dict.get("applicant_name", "")
+        response_dict = parse_llm_json_response(llm_response_text)
 
         return CoverLetterGenerationResponse(
-            cover_letter=cover_letter,
-            applicant_name=applicant_name,
+            cover_letter=response_dict.get("cover_letter", ""),
+            applicant_name=response_dict.get("applicant_name", ""),
             company_name=extracted_job_posting_details.company_name,
             job_title_name=extracted_job_posting_details.job_title,
             location=extracted_job_posting_details.location,
         )
 
+    except LLMResponseParsingError:
+        print(traceback.format_exc())
+        raise
     except Exception as e:
-        print(f"Error occurred when generating cover letter: {str(e)}")
-        raise GeneralServerError(
-            error_detail_message="The AI Model is experiencing high demand while generating your cover letter. Please retry later."
-        )
+        print(f"Error occur when evalute job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response for you. Please retry later")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -310,7 +252,7 @@ async def generate_application_question_answer_handler(
     print("target llm:", TARGET_LLM_MODEL)
 
     # Prepare job details text
-    extracted_job_posting_details_text = f"""
+    extracted_full_job_posting_details_text = f"""
     Job Title: {extracted_job_posting_details.job_title}
     Company name: {extracted_job_posting_details.company_name}
     Location: {extracted_job_posting_details.location}
@@ -331,10 +273,11 @@ async def generate_application_question_answer_handler(
     # Prepare additional requirements text if provided
     additional_requirements_text = ""
     if additional_requirements:
-        additional_requirements_text = f"additional requirements to answer this question: {additional_requirements}"
+        additional_requirements_text = additional_requirements.strip()
 
-    system_prompt = application_question_system_prompt
-    user_prompt = application_question_user_prompt.format(question=question, additional_requirements_text=additional_requirements_text)
+    application_question_user_prompt = application_question_user_prompt_template.format(
+        question=question, additional_requirements_text=additional_requirements_text
+    )
 
     # Prepare user prompt content blocks
     # Add resume
@@ -351,28 +294,29 @@ async def generate_application_question_answer_handler(
 
     # Add job detail posting content
     user_prompt_content_blocks.append({"type": "text", "text": "Job posting details:"})
-    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_job_posting_details_text}"})
+    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_full_job_posting_details_text}"})
 
     # Add user instruction with the application question
-    user_prompt_content_blocks.append({"type": "text", "text": user_prompt})
+    user_prompt_content_blocks.append({"type": "text", "text": application_question_user_prompt})
 
     try:
         llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL,
-            system_prompt=system_prompt,
+            system_prompt=application_question_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
             max_tokens=4000,
         )
 
-        # Parse the JSON response
+        # Parse the response using our utility function
         llm_response_text = llm_response.content[0].text
-        response_dict = json.loads(llm_response_text, strict=False)
+        response_dict = parse_llm_json_response(llm_response_text)
 
         return ApplicationQuestionAnswerResponse(question=response_dict.get("question", question), answer=response_dict.get("answer", ""))
 
+    except LLMResponseParsingError:
+        print(traceback.format_exc())
+        raise
     except Exception as e:
-        print(f"Error occurred when generating application question answer: {str(e)}")
-        raise GeneralServerError(
-            error_detail_message="The AI Model experienced high demand while generating your application question answer. Please retry later"
-        )
+        print(f"Error occur when evalute job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response for you. Please retry later")
