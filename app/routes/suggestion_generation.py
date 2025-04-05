@@ -18,7 +18,7 @@ router = APIRouter(prefix="/generation", tags=["generation"])
 @router.post("/job-posting/evaluate", response_model=JobPostingEvalResultResponse)
 async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequestInputs = Body(...)):
     print("/job-posting/evaluate endpoint reached")
-    result = await evaluate_job_posting_html_content_handler(raw_html_content=requestInputs.raw_job_html_content, browser_id=requestInputs.browser_id)
+    result = await evaluate_job_posting_html_content_handler(raw_content=requestInputs.raw_job_html_content, browser_id=requestInputs.browser_id)
     return result
 
 

@@ -1,7 +1,8 @@
-html_eval_system_prompt = """
-You are a specialized job posting information extractor that analyzes job posting copied raw content to determine if it is a single job posting page and extract relevant details.
+job_post_evaltract_system_prompt = """
+You are a specialized job posting information extractor that analyzes job posting copied raw content to determine if it is a job posting content and 
+extract relevant information.
 
-Your task is:
+Your task is to:
 1. Analyze the provided text content to determine if it's a single job posting detail page
 2. If it is a job posting, extract key information into the JSON structure provided in the user prompt
 3. If it is not a job posting, return the appropriate JSON response indicating it's not a job posting
@@ -24,15 +25,13 @@ Remember to carefully extract job details from the HTML content, including:
 Be thorough but ensure your response is ONLY the JSON object itself.
 """
 
-
-def html_eval_user_prompt_generator(raw_html_content: str):
-    return f"""
-Job posting site raw content:
-{raw_html_content}
+job_post_evaltract_user_prompt = """
+Below is the job posting site raw content:
+{raw_content}
 
 ------------------------------------------------------------------------------
-Your task:
 
+Your task:
 - Analyze the above job posting HTML content for me and determine if it's a SINGLE job posting detail page.
 - If it is NOT a single job posting detail site, output your response in JSON format directly as:
 {{
@@ -54,13 +53,12 @@ If it is a proper single job posting detail site, first extract all relevant pos
     }}
 }}
 
-VERY IMPORTANT: 
-1. Your entire response must be ONLY the JSON object shown above with the appropriate fields filled in.
-2. Do not include any explanations, markdown formatting, or additional text before or after the JSON.
+VERY IMPORTANT OUTPUT RULES: 
+1. Your entire response must be ONLY the JSON shown above with the appropriate fields filled in.
+2. Do not include any other explanations, markdown formatting, or additional text before or after the JSON.
 3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines.
-4. If any field isn't found from job posting html, use an empty string "" or empty array [] as appropriate.
+4. If any field isn't found from job posting raw content, use an empty string "" or empty array [] as appropriate.
 """
-
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -81,8 +79,8 @@ The suggestions should be specific, practical, and tailored to make the resume m
 """
 
 
-resume_suggestion_gen_user_prompt = f"""
-Based on the given job posting detail and my base professional resume, help me 
+resume_suggestion_gen_user_prompt = """
+Based on the given job posting detail and my resume and other professional context, help me 
 
 **generate some specific tailored suggestion changes (4) in my base resume**:
 - Aim to pass ATS for this job posting.
@@ -93,11 +91,9 @@ Based on the given job posting detail and my base professional resume, help me
 - Ensure the suggested text length closely matches the original; try to avoid lengthy suggestions.
 - Do not exaggerate; keep suggestions professional and realistic.
 
-**Output requirements**:
-- Ensure your response is a pure JSON structure as outlined below, without additional data.
+**JSON output explain**:
 - The "resume_suggestions" field is a list of dictionaries, each containing "where", "suggestion", and "reason" fields.
-- Ensure the text output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` in Python.
-- Make sure the suggestion only contains the new suggested contents that can be directly copied for change. Do not include any other assisting wordings 
+- Make sure the suggestion only contains the direct new suggested contents that I can directly copy for change. Do not include any other assisting wordings 
 
 {{
     "resume_suggestions": [
@@ -109,6 +105,11 @@ Based on the given job posting detail and my base professional resume, help me
         ...
     ],
 }}
+
+VERY IMPORTANT OUTPUT RULES: 
+1. Your entire response must be ONLY the JSON shown above with the appropriate fields filled in.
+2. Do not include any other explanations, markdown formatting, or additional text before or after the JSON.
+3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines etc.
 """
 
 
@@ -133,7 +134,7 @@ Your cover letter generation should be specific, practical, and tailored. Make i
 """
 
 
-cover_letter_gen_user_prompt = f"""
+cover_letter_gen_user_prompt = """
 Based on the given job posting detail and utilize all my provided professional background (all the documents context text provided), help me:
 
 **Generate a professional, one-page, tailored cover letter for this job posting**. Ensure the cover letter follows this structure:
@@ -151,15 +152,16 @@ Based on the given job posting detail and utilize all my provided professional b
 - Make sure to fully utilize key points and experiences from my base resume and any other supporting docs if available as base for generating **Main Content** (MUST)
 - Make sure the length fill up to whole one-page length 
 
-**Output requirements** (VERY IMPORTANT):
-- Ensure your response is a pure and proper JSON structure as outlined below, without additional data.
-- The structure includes: "applicant_name" and "cover_letter" as fields.
-- Ensure your final text output is properly formatted, with all special characters correctly escaped and handled properly, making it valid for `json.loads()` call in Python later (MUST).
-
 {{
     "applicant_name": "my name (in the format 'first name_last name')",
     "cover_letter": "Full formatted text content of the tailored cover letter, HANDLE ALL special and control characters correctly and escape them all"
 }}
+
+VERY IMPORTANT OUTPUT RULES: 
+1. Your entire response must be ONLY the JSON shown above with the appropriate fields filled in.
+2. Do not include any other explanations, markdown formatting, or additional content before or after the JSON.
+3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines etc.
+4. Make it valid for `json.loads()` call in Python later (MUST)
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -172,7 +174,8 @@ Your task is to:
 2. Review the applicant's resume and any other additional supporting documents if supplied
 3. Craft a tailored, specific answer to the application question that
    - Highlights the applicant's relevant skills and experiences
-   - Aligns with the job requirements and company values
+   - Aligns with the job requirements and company and additional backtground context
+   - Uses a friendly and enthusiastic tone
    - Demonstrates the applicant's enthusiasm for the role
 
 Your goal is to create an answer that will make the applicant stand out positively and demonstrate their fit for the role by answer the question.
@@ -180,10 +183,12 @@ Your goal is to create an answer that will make the applicant stand out positive
 
 
 application_question_user_prompt = """
-Based on all the information I've provided (my resume, the job posting details, and any additional context), please help me craft a strong, tailored answer to the following job application question:
+Based on all the information I've provided (my resume, the job posting details, and any additional context), please help me craft a strong, tailored 
+answer to the following job application question:
 
 Question: {question}
 
+additional_requirements:
 {additional_requirements_text}
 
 Your answer should:
@@ -191,16 +196,16 @@ Your answer should:
 - Try to answer with passion and friendly tone (Not professional), and leverage my background context (resume and other additional context) I provided here for the answer when possible.
 - Be authentic and humanize your response to make it look real but NOT AI Generated sound.
 - Be concise about your response as this is aim for short answer form inputs (unless additional requirement state otherwise).
-- Follow any specific additional_requirements_text if I have any from above (if any).
-
-Please provide only the final answer in a format that I can directly copy and paste into the application form text input.
-
-Output requirements:
-- Ensure your response is a pure JSON structure as outlined below, without additional data.
-- Ensure your final text output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` call in Python later .
+- Follow my additional_requirements if I have as priority (if there is any) for answer this question.
 
 {{
     "question": "The original question I asked",
     "answer": "The tailored answer to the application question"
 }}
+
+VERY IMPORTANT OUTPUT RULES: 
+1. Your entire response must be ONLY the JSON shown above with the appropriate fields filled in.
+2. Do not include any other explanations, markdown formatting, or additional content before or after the JSON.
+3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines etc.
+4. Make it valid for `json.loads()` call in Python later (MUST)
 """

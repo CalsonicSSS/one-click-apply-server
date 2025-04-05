@@ -10,8 +10,8 @@ from typing import Optional, List
 import re
 
 from app.utils.claude_handler.claude_prompts import (
-    html_eval_system_prompt,
-    html_eval_user_prompt_generator,
+    job_post_evaltract_user_prompt,
+    job_post_evaltract_system_prompt,
     cover_letter_gen_system_prompt,
     cover_letter_gen_user_prompt,
     resume_suggestion_gen_system_prompt,
@@ -27,12 +27,12 @@ from app.custom_exceptions import NotEnoughCreditsError
 from app.db.database import consume_credit
 
 
-async def evaluate_job_posting_html_content_handler(raw_html_content: str, browser_id: str) -> JobPostingEvalResultResponse:
+async def evaluate_job_posting_html_content_handler(raw_content: str, browser_id: str) -> JobPostingEvalResultResponse:
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL)
 
-    system_prompt = html_eval_system_prompt
-    user_prompt = html_eval_user_prompt_generator(raw_html_content)
+    system_prompt = job_post_evaltract_system_prompt
+    user_prompt = job_post_evaltract_user_prompt.format(raw_content=raw_content)
 
     try:
         llm_response = await claude_message_api(
