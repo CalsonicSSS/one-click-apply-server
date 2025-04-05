@@ -8,9 +8,6 @@ from app.custom_exceptions import FileTypeNotSupportedError, GeneralServerError
 
 
 def prepare_document_for_claude(doc: UploadedDocument) -> Dict[str, Any]:
-    """
-    Prepares a document for Claude API based on its file type.
-    """
     try:
         # Decode the base64 content to binary
         binary_content = base64.b64decode(doc.base64_content)
@@ -58,7 +55,7 @@ def prepare_document_for_claude(doc: UploadedDocument) -> Dict[str, Any]:
 
         else:
             raise FileTypeNotSupportedError(
-                detail_message=f"{doc.name} file type '{doc.file_type}' is not supported. Must be either pdf, docx, or txt"
+                error_detail_message=f"{doc.name} file type '{doc.file_type}' is not supported. Must be either pdf, docx, or txt"
             )
 
     # raise keyword: immediately jump to the nearest except block that matches the exception type.
@@ -68,4 +65,4 @@ def prepare_document_for_claude(doc: UploadedDocument) -> Dict[str, Any]:
 
     except Exception as e:
         print(f"Error processing document {doc.name}: {str(e)}")
-        raise GeneralServerError(detail_message="Something went wrong while process your docs")
+        raise GeneralServerError(error_detail_message="Something went wrong while process your docs")

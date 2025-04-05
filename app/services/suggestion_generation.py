@@ -23,17 +23,16 @@ from app.utils.claude_handler.claude_config_apis import claude_message_api
 from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
 from app.custom_exceptions import GeneralServerError
 from app.constants import TARGET_LLM_MODEL
+from app.custom_exceptions import NotEnoughCreditsError
+from app.db.database import consume_credit
 
 
-async def evaluate_job_posting_html_content_handler(raw_html_content: str) -> JobPostingEvalResultResponse:
+async def evaluate_job_posting_html_content_handler(raw_html_content: str, browser_id: str) -> JobPostingEvalResultResponse:
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL)
 
     system_prompt = html_eval_system_prompt
     user_prompt = html_eval_user_prompt_generator(raw_html_content)
-
-    # print("raw_html_content:")
-    # print(raw_html_content)
 
     try:
         llm_response = await claude_message_api(
@@ -47,8 +46,38 @@ async def evaluate_job_posting_html_content_handler(raw_html_content: str) -> Jo
         # based on the prompt, this will return a response in JSON format
         llm_response_text = llm_response.content[0].text
 
-        # to convert the JSON string to a actual Python dictionary
-        response_dict = json.loads(llm_response_text, strict=False)
+        # Clean up the response to ensure it's valid JSON
+        # Extract just the JSON part using regex to find content between curly braces
+        json_match = re.search(r"({[\s\S]*})", llm_response_text)
+        if json_match:
+            cleaned_json = json_match.group(1)
+        else:
+            cleaned_json = llm_response_text
+
+        try:
+            # First attempt with standard json parsing
+            response_dict = json.loads(cleaned_json, strict=False)
+        except json.JSONDecodeError:
+            # Fallback: more aggressive cleanup if standard parsing fails
+            # Remove any non-JSON content before or after the main JSON object
+
+            # Find the outermost JSON object
+            match = re.search(r"({[\s\S]*})", cleaned_json)
+            if match:
+                cleaned_json = match.group(1)
+                # Try to fix common issues
+                cleaned_json = cleaned_json.replace("\n", " ").replace("\r", "")
+                # Handle potential trailing commas
+                cleaned_json = re.sub(r",\s*}", "}", cleaned_json)
+                cleaned_json = re.sub(r",\s*]", "]", cleaned_json)
+                # Try parsing again with a more lenient approach
+                response_dict = json.loads(cleaned_json, strict=False)
+            else:
+                raise ValueError("Could not extract valid JSON from LLM response")
+
+        # at this point, its safe to consume a user credit
+        if not await consume_credit(browser_id):
+            raise NotEnoughCreditsError(error_detail_message="Not enough credits. Please purchase more.")
 
         if response_dict["is_job_posting"]:
             return JobPostingEvalResultResponse(
@@ -70,7 +99,10 @@ async def evaluate_job_posting_html_content_handler(raw_html_content: str) -> Jo
     except NoneJobSiteError:
         print(traceback.format_exc())
         raise
-
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {str(e)}")
+        print(f"Raw response: {llm_response_text}")
+        raise GeneralServerError(error_detail_message="The AI encountered an error while analyzing the job page. Please retry later.")
     except Exception as e:
         print(f"Error occur when evalute job posting content: {str(e)}")
         raise GeneralServerError(

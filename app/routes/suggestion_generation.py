@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException
-from app.custom_exceptions import NotEnoughCreditsError
 from app.models.job_posting_eval import JobPostingEvalRequestInputs, JobPostingEvalResultResponse
 from app.models.resume_suggestions import ResumeSuggestionGenerationRequestInputs, ResumeSuggestionsResponse
 from app.models.cover_letter import CoverLetterGenerationRequestInputs, CoverLetterGenerationResponse
@@ -11,7 +10,6 @@ from app.services.suggestion_generation import (
 )
 from fastapi import Body
 from app.models.application_question import ApplicationQuestionAnswerRequestInputs, ApplicationQuestionAnswerResponse
-from app.db.database import consume_credit
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/generation", tags=["generation"])
@@ -20,10 +18,7 @@ router = APIRouter(prefix="/generation", tags=["generation"])
 @router.post("/job-posting/evaluate", response_model=JobPostingEvalResultResponse)
 async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequestInputs = Body(...)):
     print("/job-posting/evaluate endpoint reached")
-    # Consume credit before processing
-    if not await consume_credit(requestInputs.browser_id):
-        raise NotEnoughCreditsError(error_detail_message="Not enough credits. Please purchase more.")
-    result = await evaluate_job_posting_html_content_handler(raw_html_content=requestInputs.raw_job_html_content)
+    result = await evaluate_job_posting_html_content_handler(raw_html_content=requestInputs.raw_job_html_content, browser_id=requestInputs.browser_id)
     return result
 
 

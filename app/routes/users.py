@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from app.db.database import get_or_create_user
 from fastapi import Query
 
-# Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/users", tags=["users"])
 
 

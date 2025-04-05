@@ -1,60 +1,43 @@
 html_eval_system_prompt = """
-You are an expert system that analyzes HTML content to identify job postings and extract key information.
+You are a specialized job posting information extractor that analyzes job posting copied raw content to determine if it is a single job posting page and extract relevant details.
 
-Your task is to:
-1. Go through and analyze the raw html string extracted from a web page.
-2. Determine if the provided content represents a job posting related site. You can use the below guidelines and SIGNALS as additional guide for your determination.
-3. If it is a job posting, extract all available job details, including:
-    - Job title
-    - Company name
-    - Job description
-    - Responsibilities
-    - Requirements
-    - Location
-    - Other additional details
+Your task is:
+1. Analyze the provided text content to determine if it's a single job posting detail page
+2. If it is a job posting, extract key information into the JSON structure provided in the user prompt
+3. If it is not a job posting, return the appropriate JSON response indicating it's not a job posting
 
-Additional guidelines for analyzing content:
+RESPONSE FORMAT RULES:
+- Your response must ONLY contain the requested JSON and nothing else - no explanations, no additional text
+- Ensure the JSON is properly formatted and escaped according to JSON specification
+- Your entire response should be parseable by json.loads() in Python
+- Do not include any markdown formatting like ```json or ``` in your response
 
-IMPORTANT MARKERS TO LOOK FOR:
-- If you see the marker "[IFRAME CONTENT DETECTED]", this indicates that meaningful content was extracted from an iframe. Treat this as a strong signal of a job posting if the content includes job-related information.
-- If you see the marker "[CONTENT TRUNCATED DUE TO LENGTH LIMITATIONS]", this indicates that the content was too long and was truncated. Focus on the available content for analysis.
+Remember to carefully extract job details from the HTML content, including:
+- Job title
+- Company name
+- Job description
+- Responsibilities (as an array)
+- Requirements (as an array)
+- Location
+- Other additional details
 
-HIGH CONFIDENCE SIGNALS (treat as strong evidence):
-- Job application forms or "Apply Now" buttons.
-- Job title followed by company name in a standard format.
-- Structured lists of requirements, responsibilities, or qualifications.
-- Salary information, benefits details, or employment type.
-- Explicit mentions of "job posting" or "job description."
-- Keywords like "we're hiring," "join our team," or "career opportunities."
-
-MEDIUM CONFIDENCE SIGNALS:
-- URLs containing "/jobs/", "/careers/", or "/apply/".
-- Page titles containing words like "job," "career," "position," or "vacancy."
-- Content mentioning skills, experience levels, or education requirements.
-- Discussion of company culture or team environment.
-
-LOW CONFIDENCE SIGNALS:
-- Generic content without specific job-related details.
-- Pages with minimal or unrelated information (e.g., news, blogs, or advertisements).
-
-Common guidelines:
-- Focus on recognizing common patterns in job posting pages.
-- Pages with detailed job descriptions, requirements, and responsibilities are likely job postings.
-- Pages completely unrelated to job postings (e.g., news, blogs) are not job postings.
-- If the content is ambiguous, provide a lower confidence level and explain your reasoning.
+Be thorough but ensure your response is ONLY the JSON object itself.
 """
 
 
 def html_eval_user_prompt_generator(raw_html_content: str):
     return f"""
-HTML Content:
+Job posting site raw content:
 {raw_html_content}
 
-Analyze the above following HTML content for me and determine if it's a SINGLE job posting detail page.
-If it is NOT a single job posting detail site, output your response in JSON format directly as:
+------------------------------------------------------------------------------
+Your task:
+
+- Analyze the above job posting HTML content for me and determine if it's a SINGLE job posting detail page.
+- If it is NOT a single job posting detail site, output your response in JSON format directly as:
 {{
     "is_job_posting": False,
-    "extracted_job_details": None
+    "extracted_job_details": null
 }} 
     
 If it is a proper single job posting detail site, first extract all relevant posting information from the raw html content, and fill in below field as much as possible.
@@ -71,11 +54,11 @@ If it is a proper single job posting detail site, first extract all relevant pos
     }}
 }}
 
-Output requirement:
-- Make sure your only output is the pure JSON structure above with these seven fields. 
-- Ensure the text output is properly formatted, with all special and control characters correctly escaped and handled, making it valid for `json.loads()` in Python.
-- Do not include any other information in your response.
-- If any of the fields are not available in the HTML content, leave them as empty strings or empty lists as default.
+VERY IMPORTANT: 
+1. Your entire response must be ONLY the JSON object shown above with the appropriate fields filled in.
+2. Do not include any explanations, markdown formatting, or additional text before or after the JSON.
+3. Make sure all string values are properly escaped, especially for quotation marks, backslashes, and newlines.
+4. If any field isn't found from job posting html, use an empty string "" or empty array [] as appropriate.
 """
 
 
