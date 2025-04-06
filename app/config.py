@@ -46,7 +46,7 @@ class Settings(BaseSettings):
 
     # Stripe settings
     STRIPE_SECRET_KEY: str
-    STRIPE_WEBHOOK_SECRET: str = "test1"
+    STRIPE_WEBHOOK_SECRET: str
 
     # we use this Config class here as a nested class to further configure the "Settings" class (This is the pydantic feature)
     class Config:
