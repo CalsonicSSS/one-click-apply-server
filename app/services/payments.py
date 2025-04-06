@@ -18,10 +18,8 @@ async def create_checkout_session(browser_id: str, package: str) -> dict:
     price_amount = int(package_info["price"] * 100)  # Convert to cents
 
     try:
-        extension_id = "ehahldmldlcmhnkdfihbppdlkddkkkmd"  # You'll replace this with your actual extension ID after publishing
-        # For development, we can use a placeholder that will be replaced with the correct extension ID
-        success_url = f"chrome-extension://{extension_id}/success.html"
-        cancel_url = f"chrome-extension://{extension_id}/cancel.html"
+        success_url = f"https://wise-craft-server.onrender.com/payment/success?browser_id={browser_id}"
+        cancel_url = f"https://wise-craft-server.onrender.com/payment/cancel"
 
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
