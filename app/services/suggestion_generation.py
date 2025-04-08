@@ -24,7 +24,7 @@ from app.db.database import consume_credit
 from app.utils.data_parsing import parse_llm_json_response
 
 
-async def evaluate_job_posting_html_content_handler(raw_content: str, browser_id: str) -> JobPostingEvalResultResponse:
+async def evaluate_job_posting_content_handler(raw_content: str, browser_id: str) -> JobPostingEvalResultResponse:
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL)
 
@@ -68,16 +68,19 @@ async def evaluate_job_posting_html_content_handler(raw_content: str, browser_id
             )
     except NoneJobSiteError:
         print(traceback.format_exc())
+        print("NoneJobSiteError occurred")
         raise
     except NotEnoughCreditsError:
         print(traceback.format_exc())
+        print("NotEnoughCreditsError occurred")
         raise
     except LLMResponseParsingError:
         print(traceback.format_exc())
+        print("LLMResponseParsingError occurred")
         raise
     except Exception as e:
         print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response for you. Please retry later")
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -154,10 +157,11 @@ async def generate_resume_suggestions_handler(
 
     except LLMResponseParsingError:
         print(traceback.format_exc())
+        print("LLMResponseParsingError occurred")
         raise
     except Exception as e:
         print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response for you. Please retry later")
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -232,10 +236,11 @@ async def generate_cover_letter_handler(
 
     except LLMResponseParsingError:
         print(traceback.format_exc())
+        print("LLMResponseParsingError occurred")
         raise
     except Exception as e:
         print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response for you. Please retry later")
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -316,7 +321,9 @@ async def generate_application_question_answer_handler(
 
     except LLMResponseParsingError:
         print(traceback.format_exc())
+        print("LLMResponseParsingError occurred")
+
         raise
     except Exception as e:
         print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response for you. Please retry later")
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")

@@ -3,7 +3,7 @@ from app.models.job_posting_eval import JobPostingEvalRequestInputs, JobPostingE
 from app.models.resume_suggestions import ResumeSuggestionGenerationRequestInputs, ResumeSuggestionsResponse
 from app.models.cover_letter import CoverLetterGenerationRequestInputs, CoverLetterGenerationResponse
 from app.services.suggestion_generation import (
-    evaluate_job_posting_html_content_handler,
+    evaluate_job_posting_content_handler,
     generate_resume_suggestions_handler,
     generate_cover_letter_handler,
     generate_application_question_answer_handler,
@@ -25,7 +25,7 @@ async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequest
         scrape_result = firecrawl_app.scrape_url(requestInputs.website_url, params={'formats': ['markdown', 'html']})
         raw_content = scrape_result['markdown']
         
-    result = await evaluate_job_posting_html_content_handler(raw_content=raw_content, browser_id=requestInputs.browser_id)
+    result = await evaluate_job_posting_content_handler(raw_content=raw_content, browser_id=requestInputs.browser_id)
     return result
 
 
