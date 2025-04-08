@@ -28,6 +28,7 @@ async def evaluate_job_posting_content_handler(raw_content: str, browser_id: str
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL)
 
+    print("raw_content:", raw_content)
     job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
 
     try:
