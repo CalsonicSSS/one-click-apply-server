@@ -31,7 +31,7 @@ class ResumeSection(BaseModel):
 class FullResumeGenerationResponse(BaseModel):
     applicant_name: str
     contact_info: str
-    summary: str
+    summary: List[str]
     skills: List[str]
     sections: List[ResumeSection]
     full_resume_text: str

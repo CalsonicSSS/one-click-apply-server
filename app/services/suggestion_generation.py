@@ -228,7 +228,7 @@ async def generate_full_resume_handler(
         return FullResumeGenerationResponse(
             applicant_name=response_dict.get("applicant_name", ""),
             contact_info=response_dict.get("contact_info", ""),
-            summary=response_dict.get("summary", ""),
+            summary=response_dict.get("summary", []),
             skills=response_dict.get("skills", []),
             sections=[
                 ResumeSection(title=section.get("title", ""), content=section.get("content", "")) for section in response_dict.get("sections", [])

@@ -145,8 +145,8 @@ Based on the given job posting detail and my provided professional background (w
 **Generate a complete, tailored professional resume for this job posting**. The resume should be ready to submit and limited to a maximum of 2 pages.
 
 Ensure the resume follows a professional structure:
-- **Contact Information:** My name, phone, email, and any professional profile links
-- **Professional Summary:** A tailored summary highlighting my relevant experience and skills for this position
+- **Contact Information:** My name, phone, email etc (if any of these exist, no social media or other links)
+- **Professional Summary:** A focused list of 4-5 bullet points highlighting my relevant experience, skills, and QUANTIFIABLE ACHIEVEMENTS for this position
 - **Skills:** A focused list of my most relevant skills for this position
 - **Work Experience:** Tailored descriptions of my previous roles, focusing on achievements and responsibilities most relevant to this job
 - **Education:** My educational background with any relevant highlights
@@ -156,33 +156,35 @@ Ensure the resume follows a professional structure:
 - Fully utilize my existing resume as the foundation
 - Incorporate relevant keywords from the job posting to improve ATS compatibility
 - Quantify achievements where possible (THIS IS VERY IMPORTANT)
+- Format the Professional Summary as bullet points, not as a paragraph
 - Focus on the most relevant experiences and skills for this specific job
 - Keep the format clean and professional
 - Limit to 2 pages maximum
 
-{{
+{
     "applicant_name": "my full name",
-    "contact_info": "my contact information (phone, email, location, etc.)",
-    "summary": "professional summary paragraph tailored to this job",
+    "contact_info": "my contact information (phone, email, location, if any of these exist)",
+    "summary": ["summary point 1", "summary point 2", "summary point 3", "summary point 4", ...],
     "skills": ["skill1", "skill2", "skill3", ...],
     "sections": [
-        {{
+        {
             "title": "Work Experience",
             "content": "formatted content of work experience section"
-        }},
-        {{
+        },
+        {
             "title": "Education",
             "content": "formatted content of education section"
-        }},
+        },
         ... other sections as needed
     ],
     "full_resume_text": "The complete formatted resume text with all sections and proper spacing"
-}}
+}
 
 VERY IMPORTANT OUTPUT RULES: 
 1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
 2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
+4. The "summary" field MUST be an array of strings, not a single string with bullet points.
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
