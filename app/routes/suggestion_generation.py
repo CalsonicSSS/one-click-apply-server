@@ -20,7 +20,6 @@ router = APIRouter(prefix="/generation", tags=["generation"])
 async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequestInputs = Body(...)):
     print("/job-posting/evaluate endpoint reached")
     raw_content = requestInputs.raw_job_html_content
-    print('website_url', requestInputs.website_url)
     if requestInputs.website_url:
         # Use firecrawl to scrape the website
         scrape_result = firecrawl_app.scrape_url(requestInputs.website_url, params={'formats': ['markdown', 'html']})
