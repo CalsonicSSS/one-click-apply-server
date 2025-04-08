@@ -10,6 +10,7 @@ from app.services.suggestion_generation import (
 )
 from fastapi import Body
 from app.models.application_question import ApplicationQuestionAnswerRequestInputs, ApplicationQuestionAnswerResponse
+from app.utils.firecrawl import firecrawl_app
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/generation", tags=["generation"])
@@ -18,7 +19,14 @@ router = APIRouter(prefix="/generation", tags=["generation"])
 @router.post("/job-posting/evaluate", response_model=JobPostingEvalResultResponse)
 async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequestInputs = Body(...)):
     print("/job-posting/evaluate endpoint reached")
-    result = await evaluate_job_posting_html_content_handler(raw_content=requestInputs.raw_job_html_content, browser_id=requestInputs.browser_id)
+    raw_content = requestInputs.raw_job_html_content
+    print('website_url', requestInputs.website_url)
+    if requestInputs.website_url:
+        # Use firecrawl to scrape the website
+        scrape_result = firecrawl_app.scrape_url(requestInputs.website_url, params={'formats': ['markdown', 'html']})
+        raw_content = scrape_result['markdown']
+        
+    result = await evaluate_job_posting_html_content_handler(raw_content=raw_content, browser_id=requestInputs.browser_id)
     return result
 
 
