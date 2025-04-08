@@ -1,6 +1,6 @@
 import traceback
 from app.models.job_posting_eval import JobPostingEvalResultResponse, ExtractedJobPostingDetails
-from app.models.resume_suggestions import ResumeSuggestionsResponse, ResumeSuggestion
+from app.models.resume_suggestions import ResumeSuggestionsResponse, ResumeSuggestion, FullResumeGenerationResponse, ResumeSection
 from app.models.cover_letter import CoverLetterGenerationResponse
 from app.models.uploaded_doc import UploadedDocument
 from app.models.application_question import ApplicationQuestionAnswerResponse
@@ -16,6 +16,8 @@ from app.utils.claude_handler.claude_prompts import (
     resume_suggestion_gen_user_prompt,
     application_question_system_prompt,
     application_question_user_prompt_template,
+    full_resume_gen_system_prompt,
+    full_resume_gen_user_prompt,
 )
 from app.utils.claude_handler.claude_config_apis import claude_message_api
 from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
@@ -112,8 +114,6 @@ async def generate_resume_suggestions_handler(
     {extracted_job_posting_details.other_additional_details}
     """
 
-    system_prompt = resume_suggestion_gen_system_prompt
-
     # user prompt content blocks
     # add resume
     user_prompt_content_blocks = [
@@ -137,7 +137,7 @@ async def generate_resume_suggestions_handler(
     try:
         llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL,
-            system_prompt=system_prompt,
+            system_prompt=resume_suggestion_gen_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
             max_tokens=4000,
@@ -162,6 +162,86 @@ async def generate_resume_suggestions_handler(
         raise
     except Exception as e:
         print(f"Error occur when evalute job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
+
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+
+async def generate_full_resume_handler(
+    extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
+) -> FullResumeGenerationResponse:
+    print("generate_full_resume_handler runs")
+    print("target llm:", TARGET_LLM_MODEL)
+
+    # Prepare job details text
+    extracted_full_job_posting_details_text = f"""
+    Job Title: {extracted_job_posting_details.job_title}
+    Company name: {extracted_job_posting_details.company_name}
+    Location: {extracted_job_posting_details.location}
+    
+    Job Description:
+    {extracted_job_posting_details.job_description}
+    
+    Responsibilities:
+    {extracted_job_posting_details.responsibilities}
+    
+    Requirements:
+    {extracted_job_posting_details.requirements}
+    
+    Other additional Details:
+    {extracted_job_posting_details.other_additional_details}
+    """
+
+    # user prompt content blocks
+    # add resume
+    user_prompt_content_blocks = [
+        {"type": "text", "text": "my base resume:"},
+        prepare_document_for_claude(resume_doc),
+    ]
+
+    # add other supporting docs
+    if supporting_docs:
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context:"})
+        for doc in supporting_docs:
+            user_prompt_content_blocks.append(prepare_document_for_claude(doc))
+
+    # add job detail posting content
+    user_prompt_content_blocks.append({"type": "text", "text": "Job posting details:"})
+    user_prompt_content_blocks.append({"type": "text", "text": f"{extracted_full_job_posting_details_text}"})
+
+    # add user instruction
+    user_prompt_content_blocks.append({"type": "text", "text": full_resume_gen_user_prompt})
+    try:
+        llm_response = await claude_message_api(
+            model="claude-3-7-sonnet-20250219",
+            system_prompt=full_resume_gen_system_prompt,
+            messages=[{"role": "user", "content": user_prompt_content_blocks}],
+            temp=0.2,
+            max_tokens=4000,
+        )
+
+        # Parse the response using our utility function
+        llm_response_text = llm_response.content[0].text
+        response_dict = parse_llm_json_response(llm_response_text)
+
+        return FullResumeGenerationResponse(
+            applicant_name=response_dict.get("applicant_name", ""),
+            contact_info=response_dict.get("contact_info", ""),
+            summary=response_dict.get("summary", ""),
+            skills=response_dict.get("skills", []),
+            sections=[
+                ResumeSection(title=section.get("title", ""), content=section.get("content", "")) for section in response_dict.get("sections", [])
+            ],
+            full_resume_text=response_dict.get("full_resume_text", ""),
+        )
+
+    except LLMResponseParsingError:
+        print(traceback.format_exc())
+        print("LLMResponseParsingError occurred")
+        raise
+    except Exception as e:
+        print(f"Error occurred when generating full resume: {str(e)}")
         raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
 
 
@@ -193,8 +273,6 @@ async def generate_cover_letter_handler(
     {extracted_job_posting_details.other_additional_details}
     """
 
-    system_prompt = cover_letter_gen_system_prompt
-
     # Prepare user prompt content blocks
     # add resume
     user_prompt_content_blocks = [
@@ -217,7 +295,7 @@ async def generate_cover_letter_handler(
     try:
         llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL,
-            system_prompt=system_prompt,
+            system_prompt=cover_letter_gen_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
             max_tokens=4000,

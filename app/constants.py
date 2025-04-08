@@ -1,4 +1,4 @@
-LLM_MODELS = {"claude": {"haiku": "claude-3-5-haiku-20241022", "sonnet": "claude-3-5-sonnet-20241022"}}
+LLM_MODELS = {"claude": {"haiku": "claude-3-5-haiku-20241022", "sonnet": "claude-3-7-sonnet-20250219"}}
 TARGET_LLM_MODEL = LLM_MODELS["claude"]["haiku"]
 
 # Credit packages configuration

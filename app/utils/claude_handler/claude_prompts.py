@@ -115,6 +115,78 @@ VERY IMPORTANT OUTPUT RULES:
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+full_resume_gen_system_prompt = """
+You are an expert resume writer for job application. Your task is to generate a complete, tailored resume for a job applicant based on their existing resume, other supported content 
+(if there are any) for a specific job posting.
+
+Your goal is to:
+1. Analyze the given job posting details context text fully
+2. Go through the user's base resume and any other additional professional docs provided
+3. Create a complete, tailored professional resume that:
+   - Highlights the most relevant skills and experiences for this specific job
+   - Uses keywords and phrases from the job posting to improve ATS compatibility
+   - Quantifies achievements where possible
+   - Maintains a professional, clean format
+   - Is limited to 2 pages maximum
+4. Include all the essential sections of a professional resume:
+   - Contact information (from existing resume)
+   - Professional summary tailored to the job
+   - Skills section with the most relevant skills
+   - Work experience with tailored bullet points
+   - Education and certifications
+   - Any other relevant sections from the original resume
+
+Your resume generation should be specific, practical, and tailored for this particular job posting.
+"""
+
+full_resume_gen_user_prompt = """
+Based on the given job posting detail and my provided professional background (with all documents I provided), help me:
+
+**Generate a complete, tailored professional resume for this job posting**. The resume should be ready to submit and limited to a maximum of 2 pages.
+
+Ensure the resume follows a professional structure:
+- **Contact Information:** My name, phone, email, and any professional profile links
+- **Professional Summary:** A tailored summary highlighting my relevant experience and skills for this position
+- **Skills:** A focused list of my most relevant skills for this position
+- **Work Experience:** Tailored descriptions of my previous roles, focusing on achievements and responsibilities most relevant to this job
+- **Education:** My educational background with any relevant highlights
+- **Add any additional sections** from my original resume that you believe add value (certifications, projects, etc.)
+
+**Resume generation requirements**:
+- Fully utilize my existing resume as the foundation
+- Incorporate relevant keywords from the job posting to improve ATS compatibility
+- Quantify achievements where possible (THIS IS VERY IMPORTANT)
+- Focus on the most relevant experiences and skills for this specific job
+- Keep the format clean and professional
+- Limit to 2 pages maximum
+
+{{
+    "applicant_name": "my full name",
+    "contact_info": "my contact information (phone, email, location, etc.)",
+    "summary": "professional summary paragraph tailored to this job",
+    "skills": ["skill1", "skill2", "skill3", ...],
+    "sections": [
+        {{
+            "title": "Work Experience",
+            "content": "formatted content of work experience section"
+        }},
+        {{
+            "title": "Education",
+            "content": "formatted content of education section"
+        }},
+        ... other sections as needed
+    ],
+    "full_resume_text": "The complete formatted resume text with all sections and proper spacing"
+}}
+
+VERY IMPORTANT OUTPUT RULES: 
+1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
+2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON.
+3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
+"""
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 cover_letter_gen_system_prompt = """
 You are an expert professional cover letter tailoring assistant. Your task is to generate a precise, tailored, and professional cover letter, based on the given specific job posting detail.
@@ -159,7 +231,7 @@ Based on the given job posting detail and utilize all my provided professional b
 
 VERY IMPORTANT OUTPUT RULES: 
 1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
-2. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON.
+2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 """
 

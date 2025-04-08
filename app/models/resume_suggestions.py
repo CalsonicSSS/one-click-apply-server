@@ -4,7 +4,7 @@ from app.models.job_posting_eval import ExtractedJobPostingDetails
 from app.models.uploaded_doc import UploadedDocument
 
 
-class ResumeSuggestionGenerationRequestInputs(BaseModel):
+class ResumeGenerationRequestInputs(BaseModel):
     extracted_job_posting_details: ExtractedJobPostingDetails
     resume_doc: UploadedDocument
     supporting_docs: Optional[List[UploadedDocument]] = None
@@ -21,3 +21,17 @@ class ResumeSuggestion(BaseModel):
 
 class ResumeSuggestionsResponse(BaseModel):
     resume_suggestions: List[ResumeSuggestion]
+
+
+class ResumeSection(BaseModel):
+    title: str
+    content: str
+
+
+class FullResumeGenerationResponse(BaseModel):
+    applicant_name: str
+    contact_info: str
+    summary: str
+    skills: List[str]
+    sections: List[ResumeSection]
+    full_resume_text: str

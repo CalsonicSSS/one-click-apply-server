@@ -1,12 +1,17 @@
 from fastapi import APIRouter
 from app.models.job_posting_eval import JobPostingEvalRequestInputs, JobPostingEvalResultResponse
-from app.models.resume_suggestions import ResumeSuggestionGenerationRequestInputs, ResumeSuggestionsResponse
+from app.models.resume_suggestions import (
+    ResumeGenerationRequestInputs,
+    ResumeSuggestionsResponse,
+    FullResumeGenerationResponse,
+)
 from app.models.cover_letter import CoverLetterGenerationRequestInputs, CoverLetterGenerationResponse
 from app.services.suggestion_generation import (
     evaluate_job_posting_content_handler,
     generate_resume_suggestions_handler,
     generate_cover_letter_handler,
     generate_application_question_answer_handler,
+    generate_full_resume_handler,
 )
 from fastapi import Body
 from app.models.application_question import ApplicationQuestionAnswerRequestInputs, ApplicationQuestionAnswerResponse
@@ -31,9 +36,20 @@ async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequest
 
 
 @router.post("/resume-suggestions/generate", response_model=ResumeSuggestionsResponse)
-async def generate_resume_suggestions(requestInputs: ResumeSuggestionGenerationRequestInputs = Body(...)):
+async def generate_resume_suggestions(requestInputs: ResumeGenerationRequestInputs = Body(...)):
     print("/resume/suggestions-generate endpoint reached")
     result = await generate_resume_suggestions_handler(
+        extracted_job_posting_details=requestInputs.extracted_job_posting_details,
+        resume_doc=requestInputs.resume_doc,
+        supporting_docs=requestInputs.supporting_docs,
+    )
+    return result
+
+
+@router.post("/resume/generate", response_model=FullResumeGenerationResponse)
+async def generate_full_resume(requestInputs: ResumeGenerationRequestInputs = Body(...)):
+    print("/resume/generate endpoint reached")
+    result = await generate_full_resume_handler(
         extracted_job_posting_details=requestInputs.extracted_job_posting_details,
         resume_doc=requestInputs.resume_doc,
         supporting_docs=requestInputs.supporting_docs,
