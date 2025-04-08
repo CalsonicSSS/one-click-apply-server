@@ -3,8 +3,9 @@ from typing import Optional, List
 
 
 class JobPostingEvalRequestInputs(BaseModel):
-    raw_job_html_content: str
+    raw_job_html_content: Optional[str] = None
     browser_id: str
+    website_url: Optional[str] = None
 
 
 # ------------------------------------------------

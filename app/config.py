@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str
     STRIPE_WEBHOOK_SECRET: str
 
+    FIRECRAWL_API_KEY: str
+
     # we use this Config class here as a nested class to further configure the "Settings" class (This is the pydantic feature)
     class Config:
         env_file = ".env"
