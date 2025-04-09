@@ -21,21 +21,21 @@ from app.utils.claude_handler.claude_prompts import (
 )
 from app.utils.claude_handler.claude_config_apis import claude_message_api
 from app.utils.claude_handler.claude_document_handler import prepare_document_for_claude
-from app.constants import TARGET_LLM_MODEL
+from app.constants import TARGET_LLM_MODEL_HAIKU, TARGET_LLM_MODEL_SONNET
 from app.db.database import consume_credit
 from app.utils.data_parsing import parse_llm_json_response
 
 
 async def evaluate_job_posting_content_handler(raw_content: str, browser_id: str) -> JobPostingEvalResultResponse:
     print("evaluate_job_posting_html_content_handler runs")
-    print("target llm:", TARGET_LLM_MODEL)
+    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     print("raw_content:", raw_content)
     job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
 
     try:
         llm_response = await claude_message_api(
-            model=TARGET_LLM_MODEL,
+            model=TARGET_LLM_MODEL_HAIKU,
             system_prompt=job_post_evaltract_system_prompt,
             messages=[{"role": "user", "content": [{"type": "text", "text": job_post_evaltract_user_prompt}]}],
             temp=0,
@@ -93,7 +93,7 @@ async def generate_resume_suggestions_handler(
     extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> ResumeSuggestionsResponse:
     print("generate_resume_suggestions_handler runs")
-    print("target llm:", TARGET_LLM_MODEL)
+    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -136,7 +136,7 @@ async def generate_resume_suggestions_handler(
 
     try:
         llm_response = await claude_message_api(
-            model=TARGET_LLM_MODEL,
+            model=TARGET_LLM_MODEL_HAIKU,
             system_prompt=resume_suggestion_gen_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
@@ -172,7 +172,7 @@ async def generate_full_resume_handler(
     extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> FullResumeGenerationResponse:
     print("generate_full_resume_handler runs")
-    print("target llm:", TARGET_LLM_MODEL)
+    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -214,7 +214,7 @@ async def generate_full_resume_handler(
     user_prompt_content_blocks.append({"type": "text", "text": full_resume_gen_user_prompt})
     try:
         llm_response = await claude_message_api(
-            model="claude-3-7-sonnet-20250219",
+            model=TARGET_LLM_MODEL_HAIKU,
             system_prompt=full_resume_gen_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
@@ -252,7 +252,7 @@ async def generate_cover_letter_handler(
     extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> CoverLetterGenerationResponse:
     print("generate_cover_letter_handler runs")
-    print("target llm:", TARGET_LLM_MODEL)
+    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -294,7 +294,7 @@ async def generate_cover_letter_handler(
     user_prompt_content_blocks.append({"type": "text", "text": cover_letter_gen_user_prompt})
     try:
         llm_response = await claude_message_api(
-            model=TARGET_LLM_MODEL,
+            model=TARGET_LLM_MODEL_HAIKU,
             system_prompt=cover_letter_gen_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
@@ -333,7 +333,7 @@ async def generate_application_question_answer_handler(
     supporting_docs: Optional[List[UploadedDocument]] = None,
 ) -> ApplicationQuestionAnswerResponse:
     print("generate_application_question_answer_handler runs")
-    print("target llm:", TARGET_LLM_MODEL)
+    print("target llm:", TARGET_LLM_MODEL_SONNET)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -385,7 +385,7 @@ async def generate_application_question_answer_handler(
 
     try:
         llm_response = await claude_message_api(
-            model=TARGET_LLM_MODEL,
+            model=TARGET_LLM_MODEL_SONNET,
             system_prompt=application_question_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,

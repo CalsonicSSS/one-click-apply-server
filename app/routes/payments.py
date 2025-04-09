@@ -33,7 +33,7 @@ async def payment_success(browser_id: str):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Payment Successful | Ninja Craft</title>
+        <title>Payment Successful | One-Click Craft</title>
         <style>
             body {{
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -118,11 +118,11 @@ async def payment_success(browser_id: str):
             <div class="credits-info">
                 <p>Your credits have been added to your account and are ready to use.</p>
             </div>
-            <p>You can close this window and return to Ninja Craft to continue crafting your perfect job application.</p>
+            <p>You can close this window and return to One-Click Craft to continue crafting your perfect job application.</p>
             <button class="button" onclick="window.close()">Close Window</button>
         </div>
         <script>
-            // This script communicates with the Ninja Craft extension
+            // This script communicates with the One-Click Craft extension
             function notifyExtension() {{
                 // Your actual extension ID (NOT the browser_id)
                 const EXTENSION_ID = "ehahldmldlcmhnkdfihbppdlkddkkkmd";
@@ -160,7 +160,7 @@ async def payment_cancel():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Payment Cancelled | Ninja Craft</title>
+        <title>Payment Cancelled | One-Click Craft</title>
         <style>
             body {
                 font-family: Arial, sans-serif;
