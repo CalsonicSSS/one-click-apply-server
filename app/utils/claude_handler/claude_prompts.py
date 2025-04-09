@@ -161,6 +161,11 @@ Ensure the resume follows a professional structure:
 - Keep the format clean and professional
 - Limit to 2 pages maximum
 
+**Output Format Requirements (VERY IMPORTANT)**:
+- Each section content MUST be a single formatted string with appropriate line breaks (\n)
+- DO NOT use arrays or objects for section content - only use plain text strings
+- Format all section content as a single text string with proper spacing
+
 {
     "applicant_name": "my full name",
     "contact_info": "my contact information (phone, email, location, if any of these exist)",
@@ -169,11 +174,11 @@ Ensure the resume follows a professional structure:
     "sections": [
         {
             "title": "Work Experience",
-            "content": "formatted content of work experience section"
+            "content": "Job Title, Company Name (Date Range)\nBullet point description\nBullet point description\n\nJob Title, Company Name (Date Range)\nBullet point description\nBullet point description"
         },
         {
             "title": "Education",
-            "content": "formatted content of education section"
+            "content": "Degree, Institution Name (Year)\nRelevant details or achievements"
         },
         ... other sections as needed
     ],
@@ -185,6 +190,7 @@ VERY IMPORTANT OUTPUT RULES:
 2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 4. The "summary" field MUST be an array of strings, not a single string with bullet points.
+5. The "content" field in each section MUST be a single formatted string, NOT an array or object.
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -172,7 +172,7 @@ async def generate_full_resume_handler(
     extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> FullResumeGenerationResponse:
     print("generate_full_resume_handler runs")
-    print("target llm:", TARGET_LLM_MODEL_SONNET)
+    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
