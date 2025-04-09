@@ -146,11 +146,11 @@ Based on the given job posting detail and my provided professional background (w
 
 Ensure the resume follows a professional structure:
 - **Contact Information:** My name, phone, email etc (if any of these exist, no social media or other links)
-- **Professional Summary:** A focused list of 4-5 bullet points highlighting my relevant experience, skills, and QUANTIFIABLE ACHIEVEMENTS for this position
+- **Professional Summary:** A focused list of 5 bullet points highlighting my relevant experience, and QUANTIFIABLE ACHIEVEMENTS details
 - **Skills:** A focused list of my most relevant skills for this position
-- **Work Experience:** Tailored descriptions of my previous roles, focusing on achievements and responsibilities most relevant to this job
+- **Work Experience:** Show tailored descriptions for each of my previous roles, focusing on achievements and responsibilities most relevant to this job
 - **Education:** My educational background with any relevant highlights
-- **Add any additional sections** from my original resume that you believe add value (certifications, projects, etc.)
+- **Add any additional sections** from my original resume that you believe add value
 
 **Resume generation requirements**:
 - Fully utilize my existing resume as the foundation
@@ -162,9 +162,9 @@ Ensure the resume follows a professional structure:
 - Limit to 2 pages maximum
 
 **Output Format Requirements (VERY IMPORTANT)**:
-- Each section content MUST be a single formatted string with appropriate line breaks (\n)
+- Each section content MUST be a single formatted string
 - DO NOT use arrays or objects for section content - only use plain text strings
-- Format all section content as a single text string with proper spacing
+- Format all section content as a single text string with proper formatting use your best effort
 
 {
     "applicant_name": "my full name",
@@ -174,11 +174,11 @@ Ensure the resume follows a professional structure:
     "sections": [
         {
             "title": "Work Experience",
-            "content": "Job Title, Company Name (Date Range)\nBullet point description\nBullet point description\n\nJob Title, Company Name (Date Range)\nBullet point description\nBullet point description"
+            "content": "Full formatted content of work experience in string, such as: Job Title, Company Name (Date Range)\nfull description 1\nfull point description 2\n\n etc.."
         },
         {
             "title": "Education",
-            "content": "Degree, Institution Name (Year)\nRelevant details or achievements"
+            "content": "Full formatted content of education section in string, such as: Degree, Institution Name (Year)\nRelevant details or achievements"
         },
         ... other sections as needed
     ],
@@ -189,8 +189,8 @@ VERY IMPORTANT OUTPUT RULES:
 1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
 2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
-4. The "summary" field MUST be an array of strings, not a single string with bullet points.
-5. The "content" field in each section MUST be a single formatted string, NOT an array or object.
+4. The "summary" field MUST be an array of strings
+5. The "content" field in each section MUST be a full single formatted string
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
