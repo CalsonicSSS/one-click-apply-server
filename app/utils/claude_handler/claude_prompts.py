@@ -43,21 +43,22 @@ If it is a proper single job posting detail site, first extract all relevant pos
 {{
     "is_job_posting": True,
     "extracted_job_details": {{
-        "job_title": "",
-        "company_name": "",
-        "job_description": "",
-        "responsibilities": [],
-        "requirements": [],
-        "location": "",
-        "other_additional_details": "any other additional details you think important to put here from a job posting perspective"
+        "job_title": "", (must be single string)
+        "company_name": "", (must be single string)
+        "job_description": "", (must be single string)
+        "responsibilities": [], (must be array of strings)
+        "requirements": [], (must be array of strings)
+        "location": "", (must be single string)
+        "other_additional_details": "" (must be single string)
     }}
 }}
 
 VERY IMPORTANT OUTPUT RULES: 
-1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
+1. Your response must be ONLY a valid JSON object with the required fields filled in follow exactly data format as specified above. Ensure the JSON is properly formatted without any syntax errors.
 2. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 4. If any field isn't found from job posting raw content, use an empty string "" or empty array [] as appropriate.
+5. The "other_additional_details" field MUST be a string, not an object or dictionary.
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,9 +99,9 @@ Based on the given job posting detail and my resume and other professional conte
 {{
     "resume_suggestions": [
         {{
-            "where": "section of the resume to modify",
-            "suggestion": "tailored suggestion (concise)",
-            "reason": "explanation of why this change is beneficial"
+            "where": "section of the resume to modify", (must be single string)
+            "suggestion": "tailored suggestion", (must be single string) 
+            "reason": "explanation of why this change is beneficial" (must be single string)
         }},
         ...
     ],
@@ -155,7 +156,7 @@ Incorporate relevant keywords from the job posting to improve ATS compatibility
 
 Ensure the resume follows this exact professional structure:
 - **Contact Information:** My name, phone, email etc (if any of these exist, no social media or other links)
-- **Professional Summary:** A focused list of 5 bullet points highlighting my relevant experience. Focus heavily on QUANTIFIABLE ACHIEVEMENTS and specific metrics (MUST)
+- **Professional Summary:** A focused list of 5 bullet points highlighting my relevant experience. Focus heavily on QUANTIFIABLE ACHIEVEMENTS with specific metrics (MUST). DO NOT MAKE EACH POINT TOO SHORT.
 - **Skills:** A focused list of my most relevant skills for this position
 - **Work Experience:** Detailed descriptions for each of my previous job, focusing on metrics-based achievements and responsibilities relevant to this job (Very important)
 - **Education:** My educational background with any relevant highlights
@@ -166,7 +167,7 @@ Ensure the resume follows this exact professional structure:
 - Format EACH job header line EXACTLY as: "Company | Job Title | Timespan" (Example: "Acme Corp | Senior Data Architect | Jan 2020 - Dec 2022")
 - Format all bullet points with the "•" character (not dashes or asterisks)
 - Each bullet point must be unique - NEVER duplicate bullet points
-- Make each bullet point is substantial and detailed, and enriched with at least 2-3 full sentences [THIS REQUIREMENT IS ABSOLUTE] 
+- Make each bullet point substantial and detailed and enriched with at least 3-4 full sentences to tell story [THIS REQUIREMENT IS ABSOLUTE] 
 - You MUST include EXACTLY 3-5 bullet points for EACH job (minimum of 3 bullet points per job) [THIS REQUIREMENT IS ABSOLUTE]
 
 **Education Format Requirements (EXTREMELY IMPORTANT)**:
@@ -179,7 +180,7 @@ Ensure the resume follows this exact professional structure:
 Your output response should be only a JSON object with the following structure:
 {
     "applicant_name": "my full name",
-    "contact_info": "my contact information (phone, email, location, if any of these exist)",
+    "contact_info": "my contact information (phone, email etc, if any of these exist)",
     "summary": ["summary point 1", "summary point 2", "summary point 3", "summary point 4", "summary point 5"],
     "skills": ["skill1", "skill2", "skill3", ...],
     "sections": [
@@ -200,7 +201,7 @@ Your output response should be only a JSON object with the following structure:
 2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 4. The "summary" field MUST be an array of strings with EXACTLY 5 points
-5. The "content" field in each section must be text string with proper formatting
+5. The "content" field in each section must be single text string with proper formatting
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------

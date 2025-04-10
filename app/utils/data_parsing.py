@@ -41,4 +41,4 @@ def parse_llm_json_response(response_text: str) -> Dict[str, Any]:
             pass
 
     # If all parsing attempts fail
-    raise LLMResponseParsingError(error_detail_message="Something went wrong from our side. Please try again later.")
+    raise LLMResponseParsingError(error_detail_message="Something went wrong when parsing your response. Please try again later.")

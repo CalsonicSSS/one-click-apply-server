@@ -125,7 +125,7 @@ async def payment_success(browser_id: str):
             // This script communicates with the One-Click Craft extension
             function notifyExtension() {{
                 // Your actual extension ID (NOT the browser_id)
-                const EXTENSION_ID = "ehahldmldlcmhnkdfihbppdlkddkkkmd";
+                const EXTENSION_ID = "cgondpiegapndmcmlmgcobkedkgabbli";
                 
                 try {{
                     // Send a message to your extension with the browser_id

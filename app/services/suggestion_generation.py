@@ -4,7 +4,7 @@ from app.models.resume_suggestions import ResumeSuggestionsResponse, ResumeSugge
 from app.models.cover_letter import CoverLetterGenerationResponse
 from app.models.uploaded_doc import UploadedDocument
 from app.models.application_question import ApplicationQuestionAnswerResponse
-from app.custom_exceptions import NoneJobSiteError, GeneralServerError, NotEnoughCreditsError, LLMResponseParsingError
+from app.custom_exceptions import NoneJobSiteError, GeneralServerError, NotEnoughCreditsError, LLMResponseParsingError, FirecrawlError
 from typing import Optional, List
 
 from app.utils.claude_handler.claude_prompts import (
@@ -29,6 +29,8 @@ from app.utils.data_parsing import parse_llm_json_response
 async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEvalResultResponse:
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL_HAIKU)
+
+    # print("raw_content:", raw_content)
 
     job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
 
@@ -61,13 +63,19 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
                 ),
             )
         else:
-            raise NoneJobSiteError(
-                error_detail_message="This page may not contain job posting details. Please navigate to a target job posting detail page 👀"
-            )
-    except NoneJobSiteError:
+            # lets always use firecrawl Error here for both failed and non-job posting content handling so user can directly copy the content and pass to backend here
+            raise FirecrawlError(error_detail_message="firecrawl error")
+            # raise NoneJobSiteError(
+            #     error_detail_message="This page may not contain job posting details. Please navigate to a target job posting detail page 👀"
+            # )
+    except FirecrawlError:
         print(traceback.format_exc())
-        print("NoneJobSiteError occurred")
+        print("FirecrawlError occurred")
         raise
+    # except NoneJobSiteError:
+    #     print(traceback.format_exc())
+    #     print("NoneJobSiteError occurred")
+    #     raise
     except NotEnoughCreditsError:
         print(traceback.format_exc())
         print("NotEnoughCreditsError occurred")
@@ -77,8 +85,14 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
         print("LLMResponseParsingError occurred")
         raise
     except Exception as e:
-        print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
+        error_str = str(e)
+
+        if "overloaded" in error_str.lower() or "529" in error_str:
+            print(f"Overloaded error: {error_str}")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+
+        print(f"Other error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -156,8 +170,14 @@ async def generate_resume_suggestions_handler(
         print("LLMResponseParsingError occurred")
         raise
     except Exception as e:
-        print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
+        error_str = str(e)
+
+        if "overloaded" in error_str.lower() or "529" in error_str:
+            print(f"Overloaded error: {error_str}")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+
+        print(f"Other error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -167,7 +187,7 @@ async def generate_full_resume_handler(
     extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> FullResumeGenerationResponse:
     print("generate_full_resume_handler runs")
-    print("target llm:", TARGET_LLM_MODEL_SONNET)
+    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -213,7 +233,7 @@ async def generate_full_resume_handler(
             system_prompt=full_resume_gen_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
-            max_tokens=5500,
+            max_tokens=5000,
         )
 
         # Parse the response using our utility function
@@ -236,8 +256,14 @@ async def generate_full_resume_handler(
         print("LLMResponseParsingError occurred")
         raise
     except Exception as e:
-        print(f"Error occurred when generating full resume: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
+        error_str = str(e)
+
+        if "overloaded" in error_str.lower() or "529" in error_str:
+            print(f"Overloaded error: {error_str}")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+
+        print(f"Other error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -320,8 +346,14 @@ async def generate_cover_letter_handler(
         print("LLMResponseParsingError occurred")
         raise
     except Exception as e:
-        print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
+        error_str = str(e)
+
+        if "overloaded" in error_str.lower() or "529" in error_str:
+            print(f"Overloaded error: {error_str}")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+
+        print(f"Other error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -403,8 +435,14 @@ async def generate_application_question_answer_handler(
     except LLMResponseParsingError:
         print(traceback.format_exc())
         print("LLMResponseParsingError occurred")
-
         raise
+
     except Exception as e:
-        print(f"Error occur when evalute job posting content: {str(e)}")
-        raise GeneralServerError(error_detail_message="Sorry could not generate the response at this moment. Please retry later")
+        error_str = str(e)
+
+        if "overloaded" in error_str.lower() or "529" in error_str:
+            print(f"Overloaded error: {error_str}")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+
+        print(f"Other error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
