@@ -1,9 +1,9 @@
 job_post_evaltract_system_prompt = """
-You are a specialized job posting information extractor that analyzes a potential job posting markdown based raw content to determine if it is a job posting content and 
+You are a specialized job posting information extractor that analyzes a potential job posting raw content to determine if it is a job posting content and 
 extract relevant information.
 
 Your task is to:
-1. Analyze the provided web site markdown content to determine if it's a job posting detail page
+1. Analyze the provided web site content to determine if it's a job posting detail page
 2. If it is a job posting detail, extract key information into the JSON structure provided in the user prompt
 3. If it is not a job posting detail, return the appropriate JSON response indicating it's not a job posting
 
@@ -153,7 +153,6 @@ Based on the given job posting detail and my provided professional background (w
 **Generate a complete, tailored, and highly relevant professional resume for this job posting**. The resume should be ready to submit and limited to a maximum of 2 pages that 
 Incorporate relevant keywords from the job posting to improve ATS compatibility
 
-
 Ensure the resume follows this exact professional structure:
 - **Contact Information:** My name, phone, email etc (if any of these exist, no social media or other links)
 - **Professional Summary:** A focused list of 5 bullet points highlighting my relevant experience. Focus heavily on QUANTIFIABLE ACHIEVEMENTS and specific metrics (MUST)
@@ -163,20 +162,22 @@ Ensure the resume follows this exact professional structure:
 - **Add any additional sections (such as achievements / certifications related)** from my original resume that you believe add value
 
 **Work Experience Section Format Requirements for each job(EXTREMELY IMPORTANT)**:
-- Format EACH job header line EXACTLY as: "Job Title | Company | Timespan" (Example: "Senior Data Architect | Acme Corp | Jan 2020 - Dec 2022")
+- SORT ALL JOBS IN REVERSE CHRONOLOGICAL ORDER (newest/most recent jobs first, oldest last) [THIS IS CRITICAL]
+- Format EACH job header line EXACTLY as: "Company | Job Title | Timespan" (Example: "Acme Corp | Senior Data Architect | Jan 2020 - Dec 2022")
 - Format all bullet points with the "•" character (not dashes or asterisks)
 - Each bullet point must be unique - NEVER duplicate bullet points
-- Make each bullet point substantial and detailed (1-2 full sentences)
-- Must Include at least 3 bullet points per job for enriched details (MUST).
+- Make each bullet point is substantial and detailed, and enriched with at least 2-3 full sentences [THIS REQUIREMENT IS ABSOLUTE] 
+- You MUST include EXACTLY 3-5 bullet points for EACH job (minimum of 3 bullet points per job) [THIS REQUIREMENT IS ABSOLUTE]
 
 **Education Format Requirements (EXTREMELY IMPORTANT)**:
-- Format EACH education header line EXACTLY as: "Degree | Institution | Timespan". Example: "Master of Engineering (Artificial Intelligence) | University of Toronto | 2021 - 2024"
-- Do NOT use bullet points for the main degree and institution line
+- Format EACH education header line EXACTLY as: "Institution | Degree | Timespan". Example: "University of Toronto | Master of Engineering (Artificial Intelligence) | 2021 - 2024"
+- Do NOT use bullet points for the main institution and degree line
+- The degree should be on its own line after the institution/timespan line
 - Use bullet points ONLY for details under each degree (GPA, honors, scholarships, etc.)
-- Structure education entries exactly like work experience entries
+- Structure education entries exactly like work experience entries with the institution/timespan headers in the same format as company/timespan headers
 
 Your output response should be only a JSON object with the following structure:
-{{
+{
     "applicant_name": "my full name",
     "contact_info": "my contact information (phone, email, location, if any of these exist)",
     "summary": ["summary point 1", "summary point 2", "summary point 3", "summary point 4", "summary point 5"],
@@ -184,15 +185,15 @@ Your output response should be only a JSON object with the following structure:
     "sections": [
         {
             "title": "Work Experience",
-            "content": "Job Title | Company | Timespan\\n• Detailed bullet point with responsibility and experiences.\\n• Another detailed achievement with quantifiable results and metrics.\\n etc..."
+            "content": "Job Title | Company | Timespan\\n• Detailed bullet point with responsibility and experiences.\\n• Another detailed achievement with quantifiable results and metrics.\\n• Third detailed bullet point with specific achievement.\\n etc..."
         },
         {
             "title": "Education",
-            "content": "Degree, Institution Name (Year)\\nRelevant details or achievements"
+            "content": "Degree | Institution | Timespan\\nInstitution Name\\n• Relevant details or achievements"
         },
         ... other sections as needed
     ],
-}}
+}
 
 **Output Format Requirements (VERY IMPORTANT)**:
 1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.

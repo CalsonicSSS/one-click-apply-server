@@ -16,6 +16,7 @@ from app.services.suggestion_generation import (
 from fastapi import Body
 from app.models.application_question import ApplicationQuestionAnswerRequestInputs, ApplicationQuestionAnswerResponse
 from app.utils.firecrawl import firecrawl_app
+from app.custom_exceptions import FirecrawlError
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/generation", tags=["generation"])
@@ -24,14 +25,23 @@ router = APIRouter(prefix="/generation", tags=["generation"])
 @router.post("/job-posting/evaluate", response_model=JobPostingEvalResultResponse)
 async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequestInputs = Body(...)):
     print("/job-posting/evaluate endpoint reached")
-    # raw_content = requestInputs.job_posting_content
+    raw_content = None
+
     if requestInputs.website_url:
         print("web url:", requestInputs.website_url)
         # Use firecrawl to scrape the website
-        scrape_result = firecrawl_app.scrape_url(requestInputs.website_url, params={"formats": ["markdown", "html"]})
+        try:
+            scrape_result = firecrawl_app.scrape_url(requestInputs.website_url, params={"formats": ["markdown", "html"]})
+        except Exception as e:
+            print("Error scraping URL:", e)
+            raise FirecrawlError(error_detail_message="firecrawl error")
         raw_content = scrape_result["markdown"]
 
-    result = await evaluate_job_posting_content_handler(raw_content=raw_content, browser_id=requestInputs.browser_id)
+    # for manual input
+    if not raw_content and requestInputs.job_posting_content:
+        raw_content = requestInputs.job_posting_content
+
+    result = await evaluate_job_posting_content_handler(raw_content=raw_content)
     return result
 
 
@@ -64,6 +74,7 @@ async def generate_cover_letter(requestInputs: CoverLetterGenerationRequestInput
         extracted_job_posting_details=requestInputs.extracted_job_posting_details,
         resume_doc=requestInputs.resume_doc,
         supporting_docs=requestInputs.supporting_docs,
+        browser_id=requestInputs.browser_id,
     )
     return result
 

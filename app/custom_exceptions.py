@@ -32,3 +32,8 @@ class NotEnoughCreditsError(HTTPException):
 class InvalidPackageError(HTTPException):
     def __init__(self, error_detail_message: str):
         super().__init__(status_code=400, detail=error_detail_message)
+
+
+class FirecrawlError(HTTPException):
+    def __init__(self, error_detail_message: str):
+        super().__init__(status_code=500, detail=error_detail_message)

@@ -26,11 +26,10 @@ from app.db.database import consume_credit
 from app.utils.data_parsing import parse_llm_json_response
 
 
-async def evaluate_job_posting_content_handler(raw_content: str, browser_id: str) -> JobPostingEvalResultResponse:
+async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEvalResultResponse:
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
-    print("raw_content:", raw_content)
     job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
 
     try:
@@ -48,10 +47,6 @@ async def evaluate_job_posting_content_handler(raw_content: str, browser_id: str
         # Parse the response using our utility function
         response_dict = parse_llm_json_response(llm_response_text)
 
-        # At this point, it's safe to consume a user credit
-        if not await consume_credit(browser_id):
-            raise NotEnoughCreditsError(error_detail_message="Not enough credits. Please purchase more.")
-
         if response_dict["is_job_posting"]:
             return JobPostingEvalResultResponse(
                 is_job_posting=response_dict["is_job_posting"],
@@ -67,7 +62,7 @@ async def evaluate_job_posting_content_handler(raw_content: str, browser_id: str
             )
         else:
             raise NoneJobSiteError(
-                error_detail_message="This page doesn't appear to be a job posting. Please navigate to a single target job posting detail page."
+                error_detail_message="This page may not contain job posting details. Please navigate to a target job posting detail page 👀"
             )
     except NoneJobSiteError:
         print(traceback.format_exc())
@@ -218,7 +213,7 @@ async def generate_full_resume_handler(
             system_prompt=full_resume_gen_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,
-            max_tokens=4000,
+            max_tokens=5500,
         )
 
         # Parse the response using our utility function
@@ -249,7 +244,10 @@ async def generate_full_resume_handler(
 
 
 async def generate_cover_letter_handler(
-    extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
+    browser_id: str,  # Added browser_id parameter
+    extracted_job_posting_details: ExtractedJobPostingDetails,
+    resume_doc: UploadedDocument,
+    supporting_docs: list[UploadedDocument] = None,
 ) -> CoverLetterGenerationResponse:
     print("generate_cover_letter_handler runs")
     print("target llm:", TARGET_LLM_MODEL_HAIKU)
@@ -305,6 +303,10 @@ async def generate_cover_letter_handler(
         llm_response_text = llm_response.content[0].text
         response_dict = parse_llm_json_response(llm_response_text)
 
+        # At this point, it's safe to consume a user credit
+        if not await consume_credit(browser_id):
+            raise NotEnoughCreditsError(error_detail_message="Not enough credits. Please purchase more.")
+
         return CoverLetterGenerationResponse(
             cover_letter=response_dict.get("cover_letter", ""),
             applicant_name=response_dict.get("applicant_name", ""),
@@ -333,7 +335,7 @@ async def generate_application_question_answer_handler(
     supporting_docs: Optional[List[UploadedDocument]] = None,
 ) -> ApplicationQuestionAnswerResponse:
     print("generate_application_question_answer_handler runs")
-    print("target llm:", TARGET_LLM_MODEL_SONNET)
+    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -385,7 +387,7 @@ async def generate_application_question_answer_handler(
 
     try:
         llm_response = await claude_message_api(
-            model=TARGET_LLM_MODEL_SONNET,
+            model=TARGET_LLM_MODEL_HAIKU,
             system_prompt=application_question_system_prompt,
             messages=[{"role": "user", "content": user_prompt_content_blocks}],
             temp=0.2,

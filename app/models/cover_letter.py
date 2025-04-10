@@ -10,6 +10,7 @@ class CoverLetterGenerationRequestInputs(BaseModel):
     # Use "= None" when you want it to be optional with a default None value.
     # Don't use "= None (other value)" if you want it to always be explicitly set a value when instanitate.
     supporting_docs: Optional[List[UploadedDocument]] = None
+    browser_id: str
 
 
 # ----------------------------------------------------------
