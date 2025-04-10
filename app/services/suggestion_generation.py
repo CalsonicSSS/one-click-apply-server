@@ -233,7 +233,7 @@ async def generate_full_resume_handler(
             sections=[
                 ResumeSection(title=section.get("title", ""), content=section.get("content", "")) for section in response_dict.get("sections", [])
             ],
-            full_resume_text=response_dict.get("full_resume_text", ""),
+            # full_resume_text=response_dict.get("full_resume_text", ""),
         )
 
     except LLMResponseParsingError:

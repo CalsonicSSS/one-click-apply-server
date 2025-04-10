@@ -34,4 +34,4 @@ class FullResumeGenerationResponse(BaseModel):
     summary: List[str]
     skills: List[str]
     sections: List[ResumeSection]
-    full_resume_text: str
+    # full_resume_text: str
