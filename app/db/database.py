@@ -47,10 +47,13 @@ async def update_user_credits(browser_id: str, credits_to_add: int) -> dict:
     return User(browser_id=browser_id, credits=result["credits"])
 
 
-async def consume_credit(browser_id: str) -> bool:
+async def check_user_credits(browser_id: str) -> bool:
     user = await users.find_one({"browser_id": browser_id})
     if not user or user["credits"] < 1:
         return False
+    return True
 
+
+async def consume_credit(browser_id: str) -> bool:
     await update_user_credits(browser_id, -1)
     return True

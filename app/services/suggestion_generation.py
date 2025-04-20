@@ -4,7 +4,7 @@ from app.models.resume_suggestions import ResumeSuggestionsResponse, ResumeSugge
 from app.models.cover_letter import CoverLetterGenerationResponse
 from app.models.uploaded_doc import UploadedDocument
 from app.models.application_question import ApplicationQuestionAnswerResponse
-from app.custom_exceptions import NoneJobSiteError, GeneralServerError, NotEnoughCreditsError, LLMResponseParsingError, FirecrawlError
+from app.custom_exceptions import NoneJobSiteError, GeneralServerError, LLMResponseParsingError
 from typing import Optional, List
 
 from app.utils.claude_handler.claude_prompts import (
@@ -30,17 +30,15 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
-    # print("raw_content:", raw_content)
-
-    job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
-
     try:
+        job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
+
         llm_response = await claude_message_api(
             model=TARGET_LLM_MODEL_HAIKU,
             system_prompt=job_post_evaltract_system_prompt,
             messages=[{"role": "user", "content": [{"type": "text", "text": job_post_evaltract_user_prompt}]}],
             temp=0,
-            max_tokens=4000,
+            max_tokens=4500,
         )
 
         # Get the response text from Claude
@@ -63,36 +61,28 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
                 ),
             )
         else:
-            # lets always use firecrawl Error here for both failed and non-job posting content handling so user can directly copy the content and pass to backend here
-            raise FirecrawlError(error_detail_message="firecrawl error")
-            # raise NoneJobSiteError(
-            #     error_detail_message="This page may not contain job posting details. Please navigate to a target job posting detail page 👀"
-            # )
-    except FirecrawlError:
+            raise NoneJobSiteError(
+                error_detail_message="The page content may not contain full job posting details 👀. Please navigate to a job posting detail page or "
+            )
+    except NoneJobSiteError:
         print(traceback.format_exc())
-        print("FirecrawlError occurred")
+        print("NoneJobSiteError occurred")
         raise
-    # except NoneJobSiteError:
-    #     print(traceback.format_exc())
-    #     print("NoneJobSiteError occurred")
-    #     raise
-    except NotEnoughCreditsError:
-        print(traceback.format_exc())
-        print("NotEnoughCreditsError occurred")
-        raise
+
     except LLMResponseParsingError:
         print(traceback.format_exc())
         print("LLMResponseParsingError occurred")
         raise
+
     except Exception as e:
         error_str = str(e)
 
         if "overloaded" in error_str.lower() or "529" in error_str:
             print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
-        print(f"Other error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
+        print(f"An error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -174,10 +164,10 @@ async def generate_resume_suggestions_handler(
 
         if "overloaded" in error_str.lower() or "529" in error_str:
             print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
-        print(f"Other error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
+        print(f"An error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -260,10 +250,10 @@ async def generate_full_resume_handler(
 
         if "overloaded" in error_str.lower() or "529" in error_str:
             print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
-        print(f"Other error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
+        print(f"An error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -329,9 +319,8 @@ async def generate_cover_letter_handler(
         llm_response_text = llm_response.content[0].text
         response_dict = parse_llm_json_response(llm_response_text)
 
-        # At this point, it's safe to consume a user credit
-        if not await consume_credit(browser_id):
-            raise NotEnoughCreditsError(error_detail_message="Not enough credits. Please purchase more.")
+        # Only at this point, we consume a user credit
+        await consume_credit(browser_id)
 
         return CoverLetterGenerationResponse(
             cover_letter=response_dict.get("cover_letter", ""),
@@ -345,15 +334,16 @@ async def generate_cover_letter_handler(
         print(traceback.format_exc())
         print("LLMResponseParsingError occurred")
         raise
+
     except Exception as e:
         error_str = str(e)
 
         if "overloaded" in error_str.lower() or "529" in error_str:
             print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
-        print(f"Other error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
+        print(f"An error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -442,7 +432,7 @@ async def generate_application_question_answer_handler(
 
         if "overloaded" in error_str.lower() or "529" in error_str:
             print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand. Please try again in a few moments.")
+            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
-        print(f"Other error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it!")
+        print(f"An error occurred when evaluating job posting content: {error_str}")
+        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")

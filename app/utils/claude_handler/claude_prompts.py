@@ -13,7 +13,7 @@ RESPONSE FORMAT RULES:
 - Your entire response should be parseable by json.loads() in Python
 - Do not include any markdown formatting like ```json or ``` in your response
 
-Remember to carefully extract job details from the HTML content, including:
+Remember to carefully extract job details from the web site content, including only the following fields:
 - Job title
 - Company name
 - Job description
@@ -26,14 +26,14 @@ Be thorough but ensure your response is ONLY the JSON object itself.
 """
 
 job_post_evaltract_user_prompt_template = """
-Below is the website markdown format content:
+Below is the website content:
 {raw_content}
 
 ------------------------------------------------------------------------------
 
 Your task:
-- Analyze the above website markdown content for me and determine if it's a job posting detail page.
-- If it is NOT a single job posting detail site, output your response in JSON format directly as:
+- Analyze the above website content for me and determine if it's a job posting detail page.
+- After your analysis, if content does not contain much of job posting details or majority of the key job related fields are not complete or missing, output your response in JSON format directly as:
 {{
     "is_job_posting": False,
     "extracted_job_details": null
