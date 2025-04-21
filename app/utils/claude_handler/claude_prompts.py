@@ -149,9 +149,9 @@ Your resume generation should be specific, practical, and tailored for this part
 """
 
 full_resume_gen_user_prompt = """
-Based on the given job posting detail context and my based resume content and any other additional professional doc content If I ever provided (treat them the same as base resume as I may include some other important context), help me:
+Based on the given job posting detail context and my based resume content and any other additional professional doc content (treat them the same as base resume as I may include some other important context) If I ever provided, help me:
 
-**Generate a complete, tailored, and highly relevant professional resume for this job posting**. The resume should be ready to submit and limited to a maximum of 2 pages that 
+**Generate a complete, tailored, and highly relevant professional resume for this job posting**. The resume should be ready to submit and limited to a maximum of 2-3 pages that 
 Incorporate relevant keywords from the job posting to improve ATS compatibility
 
 Ensure the resume follows this exact professional structure:
@@ -162,13 +162,13 @@ Ensure the resume follows this exact professional structure:
 - **Education:** My educational background with any relevant highlights
 - **Add any additional sections (such as achievements / certifications related)** from my original resume that you believe add value
 
-**Work Experience Section Format Requirements for each job(EXTREMELY IMPORTANT)**:
-- SORT ALL JOBS IN REVERSE CHRONOLOGICAL ORDER (newest/most recent jobs first, oldest last) [THIS IS CRITICAL]
-- Format EACH job header line EXACTLY as: "Company | Job Title | Timespan" (Example: "Acme Corp | Senior Data Architect | Jan 2020 - Dec 2022")
+**Work Experience Section Format Requirements for each Experience (EXTREMELY IMPORTANT)**:
+- SORT ALL JOBS IN REVERSE CHRONOLOGICAL TIME ORDER, which means sort newest/most recent jobs first. (To do this properly, you have to identify timing order of each of my experiences given from my base resume) [THIS IS CRITICAL]
+- Format EACH Experience header line EXACTLY as: "Company | Job Title | Timespan" (Example: "Acme Corp | Senior Data Architect | Jan 2020 - Dec 2022")
 - Format all bullet points with the "•" character (not dashes or asterisks)
-- Each bullet point must be unique - NEVER duplicate bullet points
-- Make each bullet point substantial and detailed and enriched with at least 3-4 full sentences to tell story [THIS REQUIREMENT IS ABSOLUTE] 
-- You MUST include EXACTLY 3-5 bullet points for EACH job (minimum of 3 bullet points per job) [THIS REQUIREMENT IS ABSOLUTE]
+- Each bullet point must be unique - NEVER duplicate bullet points within each Experience
+- Make each bullet point is substantial and detailed and enriched with at least 3-4 full sentences to tell story [THIS REQUIREMENT IS ABSOLUTE] 
+- You MUST include EXACTLY 3 to 5 bullet points for EACH job (minimum of 3 bullet points per job) [THIS REQUIREMENT IS ABSOLUTE]
 
 **Education Format Requirements (EXTREMELY IMPORTANT)**:
 - Format EACH education header line EXACTLY as: "Institution | Degree | Timespan". Example: "University of Toronto | Master of Engineering (Artificial Intelligence) | 2021 - 2024"
