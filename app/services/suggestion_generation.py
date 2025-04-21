@@ -116,13 +116,13 @@ async def generate_resume_suggestions_handler(
     # user prompt content blocks
     # add resume
     user_prompt_content_blocks = [
-        {"type": "text", "text": "my base resume"},
+        {"type": "text", "text": "my base resume doc content"},
         prepare_document_for_claude(resume_doc),  # Handle resume with proper file type
     ]
 
     # add other supporting docs
     if supporting_docs:
-        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context:"})
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional doc content:"})
         for doc in supporting_docs:
             user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
@@ -201,13 +201,13 @@ async def generate_full_resume_handler(
     # user prompt content blocks
     # add resume
     user_prompt_content_blocks = [
-        {"type": "text", "text": "my base resume:"},
+        {"type": "text", "text": "my base resume doc content:"},
         prepare_document_for_claude(resume_doc),
     ]
 
     # add other supporting docs
     if supporting_docs:
-        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context:"})
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional doc content:"})
         for doc in supporting_docs:
             user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
@@ -290,13 +290,13 @@ async def generate_cover_letter_handler(
     # Prepare user prompt content blocks
     # add resume
     user_prompt_content_blocks = [
-        {"type": "text", "text": "my base resume:"},
+        {"type": "text", "text": "my base resume doc content:"},
         prepare_document_for_claude(resume_doc),
     ]
 
     # add other supporting docs
     if supporting_docs:
-        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context:"})
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional doc content:"})
         for doc in supporting_docs:
             user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
@@ -390,13 +390,13 @@ async def generate_application_question_answer_handler(
     # Prepare user prompt content blocks
     # Add resume
     user_prompt_content_blocks = [
-        {"type": "text", "text": "my base resume"},
+        {"type": "text", "text": "my base resume doc content"},
         prepare_document_for_claude(resume_doc),  # Handle resume with proper file type
     ]
 
     # Add other supporting docs if provided
     if supporting_docs:
-        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional context:"})
+        user_prompt_content_blocks.append({"type": "text", "text": "my additional professional doc content:"})
         for doc in supporting_docs:
             user_prompt_content_blocks.append(prepare_document_for_claude(doc))
 
