@@ -18,8 +18,8 @@ async def create_checkout_session(browser_id: str, package: str) -> dict:
     price_amount = int(package_info["price"] * 100)  # Convert to cents
 
     try:
-        success_url = f"https://wise-craft-server.onrender.com/api/v1/payments/success?browser_id={browser_id}"
-        cancel_url = f"https://wise-craft-server.onrender.com/api/v1/payments/cancel"
+        success_url = f"https://one-click-craft-server-project.onrender.com/api/v1/payments/success?browser_id={browser_id}"
+        cancel_url = f"https://one-click-craft-server-project.onrender.com/api/v1/payments/cancel"
 
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
