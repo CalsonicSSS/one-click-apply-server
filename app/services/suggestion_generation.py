@@ -64,6 +64,7 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
             raise NoneJobSiteError(
                 error_detail_message="The page content may not contain full job posting details 👀. Please navigate to a job posting detail page or "
             )
+
     except NoneJobSiteError:
         print(traceback.format_exc())
         print("NoneJobSiteError occurred")
@@ -159,6 +160,7 @@ async def generate_resume_suggestions_handler(
         print(traceback.format_exc())
         print("LLMResponseParsingError occurred")
         raise
+
     except Exception as e:
         error_str = str(e)
 
