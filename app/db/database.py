@@ -33,6 +33,7 @@ async def get_or_create_user(browser_id: str) -> dict:
         return User(browser_id=user["browser_id"], credits=user["credits"])
 
     # Create new user with 10 free credits
+    # for the development version, you can set the initial credit to whatever
     new_user = {"browser_id": browser_id, "credits": 10, "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
 
     await users.insert_one(new_user)

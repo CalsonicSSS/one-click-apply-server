@@ -62,7 +62,7 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
             )
         else:
             raise NoneJobSiteError(
-                error_detail_message="The page content may not contain full job posting details 👀. Please navigate to a job posting detail page or "
+                error_detail_message="The page content may not contain full job posting details 👀. Please navigate to a job posting detail page"
             )
 
     except NoneJobSiteError:
@@ -77,6 +77,7 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
 
     except Exception as e:
         error_str = str(e)
+        # Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}} -- this is from Claude API when it is overloaded
 
         if "overloaded" in error_str.lower() or "529" in error_str:
             print(f"Overloaded error: {error_str}")
@@ -321,7 +322,7 @@ async def generate_cover_letter_handler(
         llm_response_text = llm_response.content[0].text
         response_dict = parse_llm_json_response(llm_response_text)
 
-        # Only at this point, we consume a user credit
+        # Only at this step, we consume a user credit at the end of the process
         await consume_credit(browser_id)
 
         return CoverLetterGenerationResponse(

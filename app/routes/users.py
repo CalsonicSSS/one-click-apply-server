@@ -7,6 +7,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/get-or-create")
 async def get_or_create_user_route(browser_id: str = Query(...)):
-    print("/get-or-create endpoint reached")
+    print("/get-or-create user endpoint reached")
     user = await get_or_create_user(browser_id)
     return user
