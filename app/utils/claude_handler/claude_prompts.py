@@ -94,13 +94,14 @@ Based on the given job posting detail and my resume and other professional conte
 
 **JSON output explain**:
 - The "resume_suggestions" field is a list of dictionaries, each containing "where", "suggestion", and "reason" fields.
-- Make sure the suggestion only contains the direct new suggested contents that I can directly copy for change. Do not include any other assisting wordings 
+- CRITICAL: The "suggestion" field must contain ONLY the exact text content that should replace in the resume. Do NOT include any explanatory, assisting, or additional context text.
+- The suggestion should be the pure content that can be directly copied and pasted into the resume section.
 
 {{
     "resume_suggestions": [
         {{
             "where": "section of the resume to modify", (must be single string)
-            "suggestion": "tailored suggestion", (must be single string) 
+            "suggestion": "ONLY the exact tailored replacement text", (must be single string) 
             "reason": "explanation of why this change is beneficial" (must be single string)
         }},
         ...
@@ -111,6 +112,7 @@ VERY IMPORTANT OUTPUT RULES:
 1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
 2. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
+4. CRITICAL: The "suggestion" field must contain ONLY the direct replacement text - no other contents.
 """
 
 
@@ -288,13 +290,17 @@ Your answer should:
 - Be concise about your response as this is aim for short answer form inputs (unless additional requirement state otherwise).
 - Follow my additional_requirements if I have as priority for answer this question (if there is any).
 
+Return your response in the exact JSON format below:
 {{
     "question": "The original question I asked",
-    "answer": "The tailored answer to the application question"
+    "answer": "The tailored answer to the application question as a single string"
 }}
 
-VERY IMPORTANT OUTPUT RULES: 
-1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
-2. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON.
-3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
+CRITICAL JSON FORMAT REQUIREMENTS: 
+1. Your response must be ONLY a valid JSON object with exactly two fields: "question" and "answer"
+2. The "answer" field MUST be a single string value - never an object, array, or other data type
+3. Do not include any other text, explanations, markdown formatting, or extra info before or after the JSON
+4. Make sure all special string values are properly escaped, especially quotation marks, backslashes, and newlines
+5. If the answer needs line breaks, use \\n in the string
+6. Ensure the JSON is valid and can be parsed by json.loads() in Python
 """
