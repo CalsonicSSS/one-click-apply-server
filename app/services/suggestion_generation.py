@@ -62,7 +62,7 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
             )
         else:
             raise NoneJobSiteError(
-                error_detail_message="The page content may not contain full job posting details 👀. Please navigate to a job posting detail page"
+                error_detail_message="This page may not contain full job posting details 👀. Please navigate to a job posting detail page"
             )
 
     except NoneJobSiteError:
