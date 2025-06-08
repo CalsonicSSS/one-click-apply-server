@@ -16,7 +16,7 @@ from app.services.suggestion_generation import (
 from fastapi import Body
 from app.models.application_question import ApplicationQuestionAnswerRequestInputs, ApplicationQuestionAnswerResponse
 from app.utils.firecrawl import firecrawl_app
-from app.custom_exceptions import FirecrawlError, NotEnoughCreditsError, GeneralServerError
+from app.custom_exceptions import FirecrawlInsufficientExtractionError, NotEnoughCreditsError, GeneralServerError, GeneralFirecrawlError
 from app.db.database import check_user_credits
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
@@ -40,22 +40,27 @@ async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequest
             raw_content = scrape_result.get("markdown", "").strip()
 
             # Validate the scraped content
-            if not raw_content or len(raw_content) < 1000:
-                raise FirecrawlError(error_detail_message="firecrawl error")
+            if not raw_content or len(raw_content) < 800:
+                raise FirecrawlInsufficientExtractionError(error_detail_message="firecrawl error")
 
-        except FirecrawlError:
-            print("Firecrawl error: insufficient content extracted", e)
+        # catch firecrawl insufficient extraction error
+        except FirecrawlInsufficientExtractionError as e:
+            print("Firecrawl insufficient content extracted:", e)
             raise
 
+        # catch all other general firecrawl error. All Firecrawl errors are caught here and will be handled the same way in the frontend extension.
+        # basically user will have to manually copy and paste the job posting content if any firecrawl error occurs.
         except Exception as e:
             print("Error scraping URL using Firecrawl:", e)
-            raise FirecrawlError(error_detail_message="firecrawl error")
+            raise GeneralFirecrawlError(error_detail_message="firecrawl error")
 
     elif requestInputs.job_posting_content:
         raw_content = requestInputs.job_posting_content
 
+    # error when no url or content provided
+    # based on the new frontend implementation, this should never happen, but we still handle it gracefully.
     else:
-        raise GeneralServerError(error_detail_message="No web URL nor manual content provided.")
+        raise GeneralServerError(error_detail_message="No content error")
 
     result = await evaluate_job_posting_content_handler(raw_content=raw_content)
     return result

@@ -74,9 +74,13 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
             print(traceback.format_exc())
             print("NoneJobSiteError occurred")
             raise
+        except LLMResponseParsingError:
+            print(traceback.format_exc())
+            print("LLMResponseParsingError occurred")
+            raise
         except Exception as e:
             # Try using openAI instead
-            model = initialize_llm(model_name="openai", model='gpt-4o', temperature=0, max_tokens=4500)
+            model = initialize_llm( model_name='gpt-4.1', temperature=0, max_tokens=4500)
             # Create the Trustcall extractor for extracting the JobPostingEvalResultResponse model
             trustcall_extractor = create_extractor(
                 model,
@@ -98,13 +102,9 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
                     error_detail_message="The page content may not contain full job posting details 👀. Please navigate to a job posting detail page or "
                 )
 
-    except LLMResponseParsingError:
-        print(traceback.format_exc())
-        print("LLMResponseParsingError occurred")
-        raise
-
     except Exception as e:
         error_str = str(e)
+        # Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}} -- this is from Claude API when it is overloaded
 
         if "overloaded" in error_str.lower() or "529" in error_str:
             print(f"Overloaded error: {error_str}")
@@ -184,9 +184,15 @@ async def generate_resume_suggestions_handler(
             return ResumeSuggestionsResponse(
                 resume_suggestions=resume_suggestions,
             )
+        
+        except LLMResponseParsingError:
+            print(traceback.format_exc())
+            print("LLMResponseParsingError occurred")
+            raise
+
         except Exception as e:
             # Try using openAI instead
-            model = initialize_llm(model_name="openai", model='gpt-4o', temperature=0.2, max_tokens=4000)
+            model = initialize_llm( model_name='gpt-4.1', temperature=0.2, max_tokens=4000)
             # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
             trustcall_extractor = create_extractor(
                 model,
@@ -201,10 +207,6 @@ async def generate_resume_suggestions_handler(
             
             return result['responses'][0]
 
-    except LLMResponseParsingError:
-        print(traceback.format_exc())
-        print("LLMResponseParsingError occurred")
-        raise
     except Exception as e:
         error_str = str(e)
 
@@ -288,9 +290,14 @@ async def generate_full_resume_handler(
                 ],
                 # full_resume_text=response_dict.get("full_resume_text", ""),
             )
+        
+        except LLMResponseParsingError:
+            print(traceback.format_exc())
+            print("LLMResponseParsingError occurred")
+            raise
         except Exception as e:
             # Try using openAI instead
-            model = initialize_llm(model_name="openai", model='gpt-4o', temperature=0.2, max_tokens=5000)
+            model = initialize_llm(model_name='gpt-4.1', temperature=0.2, max_tokens=5000)
             # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
             trustcall_extractor = create_extractor(
                 model,
@@ -304,12 +311,7 @@ async def generate_full_resume_handler(
                                         HumanMessage(content=user_prompt_content_blocks)]})
             
             return result['responses'][0]
-    
 
-    except LLMResponseParsingError:
-        print(traceback.format_exc())
-        print("LLMResponseParsingError occurred")
-        raise
     except Exception as e:
         error_str = str(e)
 
@@ -396,9 +398,13 @@ async def generate_cover_letter_handler(
                 job_title_name=extracted_job_posting_details.job_title,
                 location=extracted_job_posting_details.location,
             )
+        except LLMResponseParsingError:
+            print(traceback.format_exc())
+            print("LLMResponseParsingError occurred")
+            raise
         except Exception as e:
             # Try using openAI instead
-            model = initialize_llm(model_name="openai", model='gpt-4o', temperature=0.2, max_tokens=4000)
+            model = initialize_llm(model_name='gpt-4.1', temperature=0.2, max_tokens=4000)
             # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
             trustcall_extractor = create_extractor(
                 model,
@@ -412,11 +418,6 @@ async def generate_cover_letter_handler(
                                         HumanMessage(content=user_prompt_content_blocks)]})
             
             return result['responses'][0]
-
-    except LLMResponseParsingError:
-        print(traceback.format_exc())
-        print("LLMResponseParsingError occurred")
-        raise
 
     except Exception as e:
         error_str = str(e)
@@ -506,9 +507,13 @@ async def generate_application_question_answer_handler(
             response_dict = parse_llm_json_response(llm_response_text)
 
             return ApplicationQuestionAnswerResponse(question=response_dict.get("question", question), answer=response_dict.get("answer", ""))
+        except LLMResponseParsingError:
+            print(traceback.format_exc())
+            print("LLMResponseParsingError occurred")
+            raise
         except Exception as e:
             # Try using openAI instead
-            model = initialize_llm(model_name="openai", model='gpt-4o', temperature=0.2, max_tokens=4000)
+            model = initialize_llm(model_name='gpt-4.1', temperature=0.2, max_tokens=4000)
             # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
             trustcall_extractor = create_extractor(
                 model,
@@ -522,11 +527,6 @@ async def generate_application_question_answer_handler(
                                         HumanMessage(content=user_prompt_content_blocks)]})
             
             return result['responses'][0]
-
-    except LLMResponseParsingError:
-        print(traceback.format_exc())
-        print("LLMResponseParsingError occurred")
-        raise
 
     except Exception as e:
         error_str = str(e)
