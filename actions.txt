@@ -1,0 +1,23 @@
+- pip freeze > requirements.txt (The requirements.txt file doesn't automatically update when you install packages. You need to explicitly update it)
+
+- pip install -r requirements.txt (to install all additional packages from other branch merged in)
+
+- venv\Scripts\activate
+
+- uvicorn app.main:app --reload 
+
+--------------------------------------------------
+
+for folder naming change
+
+1. Remove the old venv directory
+Remove-Item -Path .\venv -Recurse -Force
+
+2. recreate a new virtual environment:
+python -m venv venv
+
+3. Activate the new environment
+.\venv\Scripts\Activate.ps1
+
+4. Reinstall your dependencies
+pip install -r requirements.txt
