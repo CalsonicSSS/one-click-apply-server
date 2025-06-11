@@ -4,9 +4,19 @@
 
 - .\venv\Scripts\Activate.ps1 (Activate.ps1 is a PowerShell script specifically made to activate the virtual environment.)
 
-- uvicorn app.main:app --reload 
+- uvicorn app.main:app --reload
 
---------------------------------------------------
+---------------------------------------------------------------------------------------
+
+deploy on render you need to add:
+
+build command: pip install -r requirements.txt
+
+start command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+add additional env variable: "PORT: 8000"
+
+---------------------------------------------------------------------------------------
 
 for folder naming change
 
@@ -22,7 +32,7 @@ python -m venv venv
 4. Reinstall your dependencies
 pip install -r requirements.txt
 
---------------------------------------------------
+---------------------------------------------------------------------------------------
 
 New project clone start-up
 
