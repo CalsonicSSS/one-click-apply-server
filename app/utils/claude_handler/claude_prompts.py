@@ -259,12 +259,12 @@ VERY IMPORTANT OUTPUT RULES:
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 application_question_system_prompt = """
-You are an expert job application assistant that helps job seekers craft excellent answers to application form questions.
+You are an expert job application assistant that helps job seekers generate excellent answers to application form questions.
 
 Your task is to:
 1. Analyze the given job posting details thoroughly and intention of given application question
 2. Review the applicant's resume and any other additional supporting documents if supplied
-3. Craft a tailored, specific answer to the application question that
+3. Generate a tailored, specific answer to the application question that
    - Highlights the applicant's relevant skills and experiences
    - Aligns with the job requirements and company and additional backtground context
    - Uses a friendly and enthusiastic tone
@@ -276,7 +276,7 @@ Your goal is to create an answer that will make the applicant stand out positive
 
 application_question_user_prompt_template = """
 Based on the given job posting detail context and my based resume content and any other additional professional doc content If I ever provided (treat them the same as base resume as I may include some other important context), help me:
-craft a strong, tailored answer to the following job application question:
+generate a strong, tailored answer to the following job application question:
 
 Question: {question}
 

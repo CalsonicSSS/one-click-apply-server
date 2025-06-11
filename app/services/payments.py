@@ -18,8 +18,8 @@ async def create_checkout_session(browser_id: str, package: str) -> dict:
     price_amount = int(package_info["price"] * 100)  # Convert to cents
 
     try:
-        success_url = f"https://one-click-craft-server-project.onrender.com/api/v1/payments/success?browser_id={browser_id}"
-        cancel_url = f"https://one-click-craft-server-project.onrender.com/api/v1/payments/cancel"
+        success_url = f"https://one-click-apply-server-project.onrender.com/api/v1/payments/success?browser_id={browser_id}"
+        cancel_url = f"https://one-click-apply-server-project.onrender.com/api/v1/payments/cancel"
 
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
@@ -27,7 +27,7 @@ async def create_checkout_session(browser_id: str, package: str) -> dict:
                 {
                     "price_data": {
                         "currency": "usd",
-                        "product_data": {"name": f"{package} Credits Package", "description": f"Purchase {package} credits for One-Click Craft"},
+                        "product_data": {"name": f"{package} Credits Package", "description": f"Purchase {package} credits for One-Click Apply"},
                         "unit_amount": price_amount,
                     },
                     "quantity": 1,
