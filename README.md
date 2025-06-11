@@ -1,13 +1,13 @@
-# One-Click Craft API Server
+# One-Click Apply API Server
 
-One-Click Craft is a professional resume and cover letter tailoring assistant that helps job seekers optimize their application materials for specific job postings. This repository contains the FastAPI backend server that powers the One-Click Craft browser extension.
+One-Click Apply is a professional resume and cover letter tailoring assistant that helps job seekers optimize their application materials for specific job postings. This repository contains the FastAPI backend server that powers the One-Click Apply browser extension.
 
 ## 🚀 Features
 
 - **Job Posting Analysis**: Extracts and analyzes job posting details from various websites
 - **Resume Tailoring**: Generates tailored suggestions to improve resumes for specific job applications
 - **Cover Letter Generation**: Creates personalized cover letters based on job postings and resumes
-- **Application Question Answering**: Helps craft effective answers to job application questions
+- **Application Question Answering**: Helps Apply effective answers to job application questions
 - **Full Resume Generation**: Creates optimized resumes from scratch for specific job postings
 - **Credit System**: Includes a user credit system with Stripe payment integration
 
@@ -85,7 +85,7 @@ OPENAI_API_KEY=your_openai_api_key
 
 # MongoDB Configuration
 MONGO_URI=your_mongodb_connection_string
-MONGO_DB_NAME=one_click_craft
+MONGO_DB_NAME=one_click_Apply
 
 # Stripe Configuration
 STRIPE_SECRET_KEY=your_stripe_secret_key
@@ -100,8 +100,8 @@ ALLOWED_ORIGINS=["*"]
 1. Clone the repository:
 
    ```
-   git clone https://github.com/your-username/one-click-craft-server.git
-   cd one-click-craft-server
+   git clone https://github.com/your-username/one-click-Apply-server.git
+   cd one-click-Apply-server
    ```
 
 2. Create and activate a virtual environment:
@@ -192,7 +192,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ## 🌐 Deployment
 
-The service is currently deployed on Render at `https://one-click-craft-server-project.onrender.com/`.
+The service is currently deployed on Render at `https://one-click-Apply-server-project.onrender.com/`.
 
 ## ⚠️ Notes
 
