@@ -36,11 +36,14 @@ pip install -r requirements.txt
 
 New project clone start-up
 
-1. recreate a new virtual environment:
+# 1. recreate a new virtual environment:
 python -m venv venv
 
-2. Activate the new environment
+# 2. Activate the new environment
 .\venv\Scripts\Activate.ps1
 
-3. install your dependencies
+# 3. install your dependencies
 pip install -r requirements.txt
+
+# 4. run app
+uvicorn app.main:app --reload
