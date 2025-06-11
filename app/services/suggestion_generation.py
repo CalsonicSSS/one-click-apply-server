@@ -26,8 +26,6 @@ from app.constants import TARGET_LLM_MODEL_HAIKU, TARGET_LLM_MODEL_SONNET
 from app.db.database import consume_credit
 from app.utils.data_parsing import parse_llm_json_response
 from trustcall import create_extractor
-from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 
 
@@ -35,22 +33,21 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
     print("evaluate_job_posting_html_content_handler runs")
     print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
+    job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
     try:
+        # First try Claude API
         try:
-            job_post_evaltract_user_prompt = job_post_evaltract_user_prompt_template.format(raw_content=raw_content)
+            # raise Exception("Testing OpenAI fallback")
 
             llm_response = await claude_message_api(
                 model=TARGET_LLM_MODEL_HAIKU,
                 system_prompt=job_post_evaltract_system_prompt,
                 messages=[{"role": "user", "content": [{"type": "text", "text": job_post_evaltract_user_prompt}]}],
                 temp=0,
-                max_tokens=4500,
+                max_tokens=2500,
             )
 
-            # Get the response text from Claude
             llm_response_text = llm_response.content[0].text
-
-            # Parse the response using our utility function
             response_dict = parse_llm_json_response(llm_response_text)
 
             if response_dict["is_job_posting"]:
@@ -68,50 +65,53 @@ async def evaluate_job_posting_content_handler(raw_content: str) -> JobPostingEv
                 )
             else:
                 raise NoneJobSiteError(
-                    error_detail_message="The page content may not contain full job posting details 👀. Please navigate to a job posting detail page or "
+                    error_detail_message="This page may not contain full job posting details 👀. Please navigate to a job posting page"
                 )
-        except NoneJobSiteError as e:
-            print(traceback.format_exc())
-            print("NoneJobSiteError occurred")
-            raise
-        except LLMResponseParsingError:
-            print(traceback.format_exc())
-            print("LLMResponseParsingError occurred")
-            raise
-        except Exception as e:
-            # Try using openAI instead
-            model = initialize_llm( model_name='gpt-4.1', temperature=0, max_tokens=4500)
-            # Create the Trustcall extractor for extracting the JobPostingEvalResultResponse model
-            trustcall_extractor = create_extractor(
-                model,
-                tools=[JobPostingEvalResultResponse],
-                tool_choice="JobPostingEvalResultResponse",
-            )
-    
-            # Invoke the Trustcall extractor, this will call llm
-            result = trustcall_extractor.invoke({"messages": 
-                                        [SystemMessage(content=job_post_evaltract_system_prompt), 
-                                        HumanMessage(content=job_post_evaltract_user_prompt)]})
-            
-            response = result['responses'][0]
 
-            if response.is_job_posting:
-                return response
-            else:
-                raise NoneJobSiteError(
-                    error_detail_message="The page content may not contain full job posting details 👀. Please navigate to a job posting detail page or "
+        except (NoneJobSiteError, LLMResponseParsingError):
+            raise
+
+        except Exception as claude_error:
+            print(f"Claude API failed: {claude_error}")
+            print("Falling back to OpenAI...")
+
+            # Fallback to OpenAI
+            try:
+                model = initialize_llm(model_name="gpt-4.1", temperature=0, max_tokens=3500)
+                trustcall_extractor = create_extractor(
+                    model,
+                    tools=[JobPostingEvalResultResponse],
+                    tool_choice="JobPostingEvalResultResponse",
                 )
+
+                result = trustcall_extractor.invoke(
+                    {"messages": [SystemMessage(content=job_post_evaltract_system_prompt), HumanMessage(content=job_post_evaltract_user_prompt)]}
+                )
+
+                response = result["responses"][0]
+
+                if response.is_job_posting:
+                    return response
+                else:
+                    raise NoneJobSiteError(
+                        error_detail_message="This page may not contain full job posting details 👀. Please navigate to a job posting page"
+                    )
+
+            except NoneJobSiteError:
+                raise
+
+            except Exception as openai_error:
+                print(f"OpenAI fallback also failed: {openai_error}")
+                # If OpenAI fall back also failed
+                raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later 🏋️‍♂️")
+
+    except (NoneJobSiteError, LLMResponseParsingError, GeneralServerError):
+        # These custom exceptions should propagate to FastAPI
+        raise
 
     except Exception as e:
-        error_str = str(e)
-        # Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}} -- this is from Claude API when it is overloaded
-
-        if "overloaded" in error_str.lower() or "529" in error_str:
-            print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
-
-        print(f"An error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
+        print(f"An error occurred when evaluating job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -164,12 +164,14 @@ async def generate_resume_suggestions_handler(
 
     try:
         try:
+            # raise Exception("Testing OpenAI fallback")
+
             llm_response = await claude_message_api(
-                    model=TARGET_LLM_MODEL_HAIKU,
-                    system_prompt=resume_suggestion_gen_system_prompt,
-                    messages=[{"role": "user", "content": user_prompt_content_blocks}],
-                    temp=0.2,
-                    max_tokens=4000,
+                model=TARGET_LLM_MODEL_HAIKU,
+                system_prompt=resume_suggestion_gen_system_prompt,
+                messages=[{"role": "user", "content": user_prompt_content_blocks}],
+                temp=0.2,
+                max_tokens=2000,
             )
 
             # Parse the response using our utility function
@@ -184,38 +186,44 @@ async def generate_resume_suggestions_handler(
             return ResumeSuggestionsResponse(
                 resume_suggestions=resume_suggestions,
             )
-        
+
         except LLMResponseParsingError:
             print(traceback.format_exc())
             print("LLMResponseParsingError occurred")
             raise
 
-        except Exception as e:
+        except Exception as claude_error:
+            print(f"Claude API failed: {claude_error}")
+            print("Falling back to OpenAI...")
+
             # Try using openAI instead
-            model = initialize_llm( model_name='gpt-4.1', temperature=0.2, max_tokens=4000)
-            # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
-            trustcall_extractor = create_extractor(
-                model,
-                tools=[ResumeSuggestionsResponse],
-                tool_choice="ResumeSuggestionsResponse",
-            )
-    
-            # Invoke the Trustcall extractor, this will call llm
-            result = trustcall_extractor.invoke({"messages": 
-                                        [SystemMessage(content=resume_suggestion_gen_system_prompt), 
-                                        HumanMessage(content=user_prompt_content_blocks)]})
-            
-            return result['responses'][0]
+            try:
+                model = initialize_llm(model_name="gpt-4.1", temperature=0.2, max_tokens=2000)
+                # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
+                trustcall_extractor = create_extractor(
+                    model,
+                    tools=[ResumeSuggestionsResponse],
+                    tool_choice="ResumeSuggestionsResponse",
+                )
+
+                # Invoke the Trustcall extractor, this will call llm
+                result = trustcall_extractor.invoke(
+                    {"messages": [SystemMessage(content=resume_suggestion_gen_system_prompt), HumanMessage(content=user_prompt_content_blocks)]}
+                )
+
+                return result["responses"][0]
+
+            except Exception as openai_error:
+                print(f"OpenAI fallback also failed: {openai_error}")
+                # If OpenAI fall back also failed
+                raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later 🏋️‍♂️")
+
+    except (LLMResponseParsingError, GeneralServerError):
+        raise
 
     except Exception as e:
-        error_str = str(e)
-
-        if "overloaded" in error_str.lower() or "529" in error_str:
-            print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
-
-        print(f"An error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
+        print(f"An error occurred when evaluating job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -267,13 +275,14 @@ async def generate_full_resume_handler(
     user_prompt_content_blocks.append({"type": "text", "text": full_resume_gen_user_prompt})
     try:
         try:
+            # raise Exception("Testing OpenAI fallback")
 
             llm_response = await claude_message_api(
                 model=TARGET_LLM_MODEL_HAIKU,
                 system_prompt=full_resume_gen_system_prompt,
                 messages=[{"role": "user", "content": user_prompt_content_blocks}],
                 temp=0.2,
-                max_tokens=5000,
+                max_tokens=2500,
             )
 
             # Parse the response using our utility function
@@ -290,37 +299,44 @@ async def generate_full_resume_handler(
                 ],
                 # full_resume_text=response_dict.get("full_resume_text", ""),
             )
-        
+
         except LLMResponseParsingError:
             print(traceback.format_exc())
             print("LLMResponseParsingError occurred")
             raise
-        except Exception as e:
-            # Try using openAI instead
-            model = initialize_llm(model_name='gpt-4.1', temperature=0.2, max_tokens=5000)
-            # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
-            trustcall_extractor = create_extractor(
-                model,
-                tools=[FullResumeGenerationResponse],
-                tool_choice="FullResumeGenerationResponse",
-            )
-    
-            # Invoke the Trustcall extractor, this will call llm
-            result = trustcall_extractor.invoke({"messages": 
-                                        [SystemMessage(content=full_resume_gen_system_prompt), 
-                                        HumanMessage(content=user_prompt_content_blocks)]})
-            
-            return result['responses'][0]
+
+        except Exception as claude_error:
+            print(f"Claude API failed: {claude_error}")
+            print("Falling back to OpenAI...")
+
+            # Fallback to OpenAI
+            try:
+                model = initialize_llm(model_name="gpt-4.1", temperature=0.2, max_tokens=2500)
+                # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
+                trustcall_extractor = create_extractor(
+                    model,
+                    tools=[FullResumeGenerationResponse],
+                    tool_choice="FullResumeGenerationResponse",
+                )
+
+                # Invoke the Trustcall extractor, this will call llm
+                result = trustcall_extractor.invoke(
+                    {"messages": [SystemMessage(content=full_resume_gen_system_prompt), HumanMessage(content=user_prompt_content_blocks)]}
+                )
+
+                return result["responses"][0]
+
+            except Exception as openai_error:
+                print(f"OpenAI fallback also failed: {openai_error}")
+                # If OpenAI fall back also failed
+                raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later 🏋️‍♂️")
+
+    except (LLMResponseParsingError, GeneralServerError):
+        raise
 
     except Exception as e:
-        error_str = str(e)
-
-        if "overloaded" in error_str.lower() or "529" in error_str:
-            print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
-
-        print(f"An error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
+        print(f"An error occurred when evaluating job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -375,13 +391,14 @@ async def generate_cover_letter_handler(
     user_prompt_content_blocks.append({"type": "text", "text": cover_letter_gen_user_prompt})
     try:
         try:
+            # raise Exception("Testing OpenAI fallback")
 
             llm_response = await claude_message_api(
                 model=TARGET_LLM_MODEL_HAIKU,
                 system_prompt=cover_letter_gen_system_prompt,
                 messages=[{"role": "user", "content": user_prompt_content_blocks}],
                 temp=0.2,
-                max_tokens=4000,
+                max_tokens=2500,
             )
 
             # Parse the response using our utility function
@@ -402,32 +419,42 @@ async def generate_cover_letter_handler(
             print(traceback.format_exc())
             print("LLMResponseParsingError occurred")
             raise
-        except Exception as e:
-            # Try using openAI instead
-            model = initialize_llm(model_name='gpt-4.1', temperature=0.2, max_tokens=4000)
-            # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
-            trustcall_extractor = create_extractor(
-                model,
-                tools=[CoverLetterGenerationResponse],
-                tool_choice="CoverLetterGenerationResponse",
-            )
-    
-            # Invoke the Trustcall extractor, this will call llm
-            result = trustcall_extractor.invoke({"messages": 
-                                        [SystemMessage(content=cover_letter_gen_system_prompt), 
-                                        HumanMessage(content=user_prompt_content_blocks)]})
-            
-            return result['responses'][0]
+
+        except Exception as claude_error:
+            print(f"Claude API failed: {claude_error}")
+            print("Falling back to OpenAI...")
+
+            # Fallback to OpenAI
+            try:
+                model = initialize_llm(model_name="gpt-4.1", temperature=0.2, max_tokens=2500)
+                # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
+                trustcall_extractor = create_extractor(
+                    model,
+                    tools=[CoverLetterGenerationResponse],
+                    tool_choice="CoverLetterGenerationResponse",
+                )
+
+                # Invoke the Trustcall extractor, this will call llm
+                result = trustcall_extractor.invoke(
+                    {"messages": [SystemMessage(content=cover_letter_gen_system_prompt), HumanMessage(content=user_prompt_content_blocks)]}
+                )
+
+                # Only at this point, we consume a user credit
+                await consume_credit(browser_id)
+
+                return result["responses"][0]
+
+            except Exception as openai_error:
+                print(f"OpenAI fallback also failed: {openai_error}")
+                # If OpenAI fall back also failed
+                raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later 🏋️‍♂️")
+
+    except (LLMResponseParsingError, GeneralServerError):
+        raise
 
     except Exception as e:
-        error_str = str(e)
-
-        if "overloaded" in error_str.lower() or "529" in error_str:
-            print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
-
-        print(f"An error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
+        print(f"An error occurred when evaluating job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -493,13 +520,14 @@ async def generate_application_question_answer_handler(
 
     try:
         try:
+            # raise Exception("Testing OpenAI fallback")
 
             llm_response = await claude_message_api(
                 model=TARGET_LLM_MODEL_HAIKU,
                 system_prompt=application_question_system_prompt,
                 messages=[{"role": "user", "content": user_prompt_content_blocks}],
                 temp=0.2,
-                max_tokens=4000,
+                max_tokens=1500,
             )
 
             # Parse the response using our utility function
@@ -507,33 +535,41 @@ async def generate_application_question_answer_handler(
             response_dict = parse_llm_json_response(llm_response_text)
 
             return ApplicationQuestionAnswerResponse(question=response_dict.get("question", question), answer=response_dict.get("answer", ""))
+
         except LLMResponseParsingError:
             print(traceback.format_exc())
             print("LLMResponseParsingError occurred")
             raise
-        except Exception as e:
-            # Try using openAI instead
-            model = initialize_llm(model_name='gpt-4.1', temperature=0.2, max_tokens=4000)
-            # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
-            trustcall_extractor = create_extractor(
-                model,
-                tools=[ApplicationQuestionAnswerResponse],
-                tool_choice="ApplicationQuestionAnswerResponse",
-            )
 
-            # Invoke the Trustcall extractor, this will call llm
-            result = trustcall_extractor.invoke({"messages": 
-                                        [SystemMessage(content=application_question_system_prompt), 
-                                        HumanMessage(content=user_prompt_content_blocks)]})
-            
-            return result['responses'][0]
+        except Exception as claude_error:
+            print(f"Claude API failed: {claude_error}")
+            print("Falling back to OpenAI...")
+
+            try:
+
+                model = initialize_llm(model_name="gpt-4.1", temperature=0.2, max_tokens=1500)
+                # Create the Trustcall extractor for extracting the ResumeSuggestionsResponse model
+                trustcall_extractor = create_extractor(
+                    model,
+                    tools=[ApplicationQuestionAnswerResponse],
+                    tool_choice="ApplicationQuestionAnswerResponse",
+                )
+
+                # Invoke the Trustcall extractor, this will call llm
+                result = trustcall_extractor.invoke(
+                    {"messages": [SystemMessage(content=application_question_system_prompt), HumanMessage(content=user_prompt_content_blocks)]}
+                )
+
+                return result["responses"][0]
+
+            except Exception as openai_error:
+                print(f"OpenAI fallback also failed: {openai_error}")
+                # If OpenAI fall back also failed
+                raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later 🏋️‍♂️")
+
+    except (LLMResponseParsingError, GeneralServerError):
+        raise
 
     except Exception as e:
-        error_str = str(e)
-
-        if "overloaded" in error_str.lower() or "529" in error_str:
-            print(f"Overloaded error: {error_str}")
-            raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
-
-        print(f"An error occurred when evaluating job posting content: {error_str}")
-        raise GeneralServerError(error_detail_message="Something went wrong on our side. Try again later as we are working on it! 🏋️‍♂️")
+        print(f"An error occurred when evaluating job posting content: {str(e)}")
+        raise GeneralServerError(error_detail_message="Our service is currently in high demand 💥. Please try again later.")
