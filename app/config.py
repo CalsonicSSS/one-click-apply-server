@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     ALLOWED_ORIGINS: list = ["*"]  # For development, allow all origins
 
+    PORT: int = 8000
+
     # MongoDB settings
     MONGO_URI: str
     MONGO_DB_NAME: str
