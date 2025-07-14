@@ -83,9 +83,9 @@ resume_suggestion_gen_user_prompt = """
 Based on the given job posting and my resume, generate **5 specific, targeted content changes** to improve ATS compatibility and job relevance.
 
 **Requirements:**
-- Target specific sentences, bullet points, or phrases within sections (NOT entire sections)
+- Suggestion targets specific sentences, bullet point(s), or phrases within sections (NOT entire section replacements)
 - Incorporate relevant keywords from the job posting naturally
-- Quantify achievements where realistic (e.g., "Increased efficiency by 30%")
+- Quantify achievements where realistic
 - Match the length and style of the original content being replaced (very important)
 - Keep suggestions professional and realistic
 
@@ -96,7 +96,7 @@ Return ONLY a valid JSON object:
     "resume_suggestions": [
         {
             "where": "Section location indicator in the original resume (e.g., 'Work Experience - Company X')",
-            "suggestion": "The exact tailored new suggestion replacement text only for a specific resume content piece",
+            "suggestion": "The exact tailored new suggestion text only within a specific resume section content",
             "reason": "Brief explanation of why this change improves resume"
         }
     ]
@@ -104,8 +104,8 @@ Return ONLY a valid JSON object:
 
 Critical Rules:
 
-- The "suggestion" field must contain ONLY the direct tailored suggestion replacement text - no other additional explanations or context
-- Target specific content pieces, not entire sections or job entries
+- The "suggestion" field must contain ONLY the direct tailored suggestion text - no other additional explanations or context
+- Each of the suggestions can be either a directly replacement suggestion to a specific content piece, or new suggestion(s) to be added (especially true for the skill section)
 - Include 5 tailored suggestions exactly on resume for the job posting
 - Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON
 """
