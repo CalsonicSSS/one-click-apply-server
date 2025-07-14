@@ -155,7 +155,7 @@ Based on the given job posting detail and my given base resume and my other prof
 - Use "•" character for bullet points
 - 3-4 bullet points per job role (minimum 3, use your own judgement on how many to include here for me)
 - Each bullet point covers one specific aspect (responsibility, achievement, impact, etc.)
-- Keep bullet points concise and impactful (max 35-40 words each)
+- Keep bullet points concise, but impactful. Cannot be too short nor too long (range around 35-40 words per bullet point)
 - No duplicate bullet points within each job
 
 **Education Section:**
