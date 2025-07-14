@@ -121,7 +121,7 @@ async def generate_resume_suggestions_handler(
     extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> ResumeSuggestionsResponse:
     print("generate_resume_suggestions_handler runs")
-    print("target llm:", TARGET_LLM_MODEL_HAIKU)
+    print("target llm:", TARGET_LLM_MODEL_SONNET)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -167,7 +167,7 @@ async def generate_resume_suggestions_handler(
             # raise Exception("Testing OpenAI fallback")
 
             llm_response = await claude_message_api(
-                model=TARGET_LLM_MODEL_HAIKU,
+                model=TARGET_LLM_MODEL_SONNET,
                 system_prompt=resume_suggestion_gen_system_prompt,
                 messages=[{"role": "user", "content": user_prompt_content_blocks}],
                 temp=0.2,
@@ -233,7 +233,7 @@ async def generate_full_resume_handler(
     extracted_job_posting_details: ExtractedJobPostingDetails, resume_doc: UploadedDocument, supporting_docs: list[UploadedDocument] = None
 ) -> FullResumeGenerationResponse:
     print("generate_full_resume_handler runs")
-    print("target llm:", TARGET_LLM_MODEL_HAIKU)
+    print("target llm:", TARGET_LLM_MODEL_SONNET)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -278,7 +278,7 @@ async def generate_full_resume_handler(
             # raise Exception("Testing OpenAI fallback")
 
             llm_response = await claude_message_api(
-                model=TARGET_LLM_MODEL_HAIKU,
+                model=TARGET_LLM_MODEL_SONNET,
                 system_prompt=full_resume_gen_system_prompt,
                 messages=[{"role": "user", "content": user_prompt_content_blocks}],
                 temp=0.2,
