@@ -155,7 +155,7 @@ Based on the given job posting detail and my given base resume and my other prof
 - Use "•" character for bullet points
 - generate several bullet points per job role (minimum 3, use your own judgement on how many to include here for me)
 - Each bullet point covers one specific aspect (responsibility, achievement, impact, other etc.)
-- Keep bullet points concise, but also detailed and impactful (Cannot be too short and too long, range around at least 30+ words per bullet point)
+- Keep each of bullet point content concise, but also detailed and impactful (keep each bullet point word count around 25-30 words - very important)
 - No duplicate bullet points within each job
 
 **Education Section:**
