@@ -86,7 +86,7 @@ Based on the given job posting and my resume, generate **5 specific, targeted co
 - Target specific sentences, bullet points, or phrases within sections (NOT entire sections)
 - Incorporate relevant keywords from the job posting naturally
 - Quantify achievements where realistic (e.g., "Increased efficiency by 30%")
-- Match the length and style of the original content being replaced
+- Match the length and style of the original content being replaced (very important)
 - Keep suggestions professional and realistic
 
 **Output Format:**
@@ -96,7 +96,7 @@ Return ONLY a valid JSON object:
     "resume_suggestions": [
         {
             "where": "Section location indicator in the original resume (e.g., 'Work Experience - Company X')",
-            "suggestion": "The exact replacement text only for a specific point",
+            "suggestion": "The exact tailored new suggestion replacement text only for a specific resume content piece",
             "reason": "Brief explanation of why this change improves resume"
         }
     ]
@@ -104,11 +104,10 @@ Return ONLY a valid JSON object:
 
 Critical Rules:
 
-- The "suggestion" field must contain ONLY the direct replacement text - no explanations or context
+- The "suggestion" field must contain ONLY the direct tailored suggestion replacement text - no other additional explanations or context
 - Target specific content pieces, not entire sections or job entries
-- Preserve the overall structure and most content of the original resume
-- Include 5 suggestions exactly
-- Return only the final json data format without any other text in your response. Ensure proper JSON formatting with escaped characters
+- Include 5 tailored suggestions exactly on resume for the job posting
+- Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON
 """
 
 
@@ -154,9 +153,9 @@ Based on the given job posting detail and my given base resume and my other prof
 - Sort in reverse chronological order (newest first)
 - Header format: "Company | Job Title | Timespan"
 - Use "•" character for bullet points
-- 3-4 bullet points per job role (minimum 3)
+- 3-4 bullet points per job role (minimum 3, use your own judgement on how many to include here for me)
 - Each bullet point covers one specific aspect (responsibility, achievement, impact, etc.)
-- Keep bullet points concise and impactful (max 30-35 words each)
+- Keep bullet points concise and impactful (max 35-40 words each)
 - No duplicate bullet points within each job
 
 **Education Section:**
@@ -172,8 +171,8 @@ Based on the given job posting detail and my given base resume and my other prof
 ## Output Requirements:
 Return ONLY a valid JSON object with this exact structure:
 
-```json
-{
+
+{{
     "applicant_name": "Full Name",
     "contact_info": "Phone, email if available",
     "summary": ["point 1", "point 2", "point 3", "point 4", "point 5"],
@@ -192,11 +191,11 @@ Return ONLY a valid JSON object with this exact structure:
             "content": "• Achievement detail 1\n• Achievement detail 2"
         }
     ]
-}
-```
+}}
+
 
 **Critical Output Requirements:**
-1. Ensure proper JSON formatting with escaped characters as your only response
+1. Ensure proper JSON data formatting with escaped characters as your only response
 2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON
 3. Make sure all special string values are properly escaped (quotation marks, backslashes, newlines)
 4. The "content" field in each section must be a single text string with proper formatting
