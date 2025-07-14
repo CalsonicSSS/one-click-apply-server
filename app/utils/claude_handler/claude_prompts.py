@@ -120,86 +120,77 @@ VERY IMPORTANT OUTPUT RULES:
 
 
 full_resume_gen_system_prompt = """
-You are an expert resume writer for job applications. Your task is to generate a complete, tailored resume for a job applicant based on existing resume and other supporting content for a specific job posting.
+You are an expert resume writer specializing in ATS-optimized, job-specific resume tailoring. 
 
-Your goal is to:
-1. Analyze the given job posting details thoroughly and carefully.
-2. Review the user's base resume doc content and any other additional professional documents provided (all provided documents are equally important. User can provide some other important context from other documents as well).
-3. Create a complete, tailored professional resume that:
-   - Highlights the most relevant skills and experiences for this specific job
-   - Uses keywords and phrases from the job posting to improve ATS compatibility
-   - Quantifies achievements with specific metrics and numbers wherever possible
-   - Maintains a professional, clean format
-   - Is limited to 2 pages maximum
-4. Include all the essential sections of a professional resume:
-   - Contact information (from base resume)
-   - Professional summary section tailored to the job with relevant QUANTIFIABLE ACHIEVEMENTS / specific metrics and introduce the overall profile (as bullet points)
-   - Skills section with the most relevant skills for this position
-   - Work experience section with detailed responsibility and achievement-focused bullet points (very important)
-   - Education section with relevant details
-   - Any other relevant sections from the original resume
+## Core Responsibilities:
+1. **Analyze** the job posting to identify key requirements, skills, and keywords
+2. **Extract** relevant contents, experiences and achievements from the user's base resume and their additional supporting documents
+3. **Generate** a complete, tailored resume that maximizes relevance to the specific position
 
-When creating work experience entries under each job in resume:
-- Format each job header exactly as: "Job Title | Company | Timespan"
-- Ensure each bullet point is unique - never duplicate bullet points
-- Make each bullet point detailed and rich (1-2 full sentences) but also concise
-- Focus on specific achievements, outcomes, and impact, not just responsibilities
-- Always quantify results with metrics when available (percentages, dollar amounts, time saved, etc.)
-- Ensure consistent formatting across all bullet points
+## Resume Creation Standards:
+- **ATS Optimization:** Incorporate job posting keywords naturally throughout
+- **Quantified Impact:** Use specific metrics, percentages, and measurable outcomes
+- **Relevance Focus:** Prioritize experiences and skills most aligned with job requirements
+- **Professional Format:** Clean, consistent structure limited to 2 pages maximum
 
-Your resume generation should be specific, practical, and tailored for this particular job posting.
+## Output Requirements:
+- Return only valid JSON in the specified structure
+- Ensure proper character escaping and formatting
+- Focus on quantifiable achievements over responsibilities
+
+Your ultimate goal is to transform the user's background into a compelling, job-specific narrative that demonstrates clear value to the target employer.
 """
 
 full_resume_gen_user_prompt = """
-Based on the given job posting detail context and my based resume content and any other additional professional doc content (treat them the same as base resume as I may include some other important context) If I ever provided, help me:
+Based on the given job posting detail and my given base resume and my other professional documents, help me generate a complete, ATS-optimized and tailored resume. Maximum 2 pages approximately.
 
-**Generate a complete, tailored, and highly relevant professional resume for this job posting**. The resume should be ready to submit and limited to a maximum of 2-3 pages that 
-Incorporate relevant keywords from the job posting to improve ATS compatibility
+## Required Structure & Content:
+- **Contact Information:** Name, phone, email (no social media links)
+- **Professional Summary:** 5 bullet points highlighting relevant experience with quantifiable achievements in high level overview and mentioning key skills
+- **Skills:** Most relevant skills for the position
+- **Work Experience:** Detailed job descriptions with metrics-based achievements
+- **Education:** Educational background with relevant highlights
+- **Additional Sections:** Certifications, achievements, or other valuable content from original resume
 
-Ensure the resume follows this exact professional structure:
-- **Contact Information:** My name, phone, email etc (if any of these exist, no social media or other links)
-- **Professional Summary:** A focused list of 5 bullet points highlighting my relevant experience. Focus heavily on QUANTIFIABLE ACHIEVEMENTS with specific metrics (MUST). DO NOT MAKE EACH POINT TOO SHORT.
-- **Skills:** A focused list of my most relevant skills for this position
-- **Work Experience:** Detailed descriptions for each of my previous job, focusing on metrics-based achievements and responsibilities relevant to this job (Very important)
-- **Education:** My educational background with any relevant highlights
-- **Add any additional sections (such as achievements / certifications related)** from my original resume that you believe add value
+## Formatting Requirements:
 
-**Work Experience Section Format Requirements for each Experience (EXTREMELY IMPORTANT)**:
-- SORT ALL JOBS IN REVERSE CHRONOLOGICAL TIME ORDER, which means sort newest/most recent jobs first. (To do this properly, you have to identify timing order of each of my experiences given from my base resume) [THIS IS CRITICAL]
-- Format EACH Experience header line EXACTLY as: "Company | Job Title | Timespan" (Example: "Acme Corp | Senior Data Architect | Jan 2020 - Dec 2022")
-- Format all bullet points with the "•" character (not dashes or asterisks)
-- Each bullet point must be unique - NEVER duplicate bullet points within each Experience
-- Make each bullet point is substantial and detailed and enriched with at least 3-4 full sentences to tell story [THIS REQUIREMENT IS ABSOLUTE] 
-- You MUST include EXACTLY 3 to 5 bullet points for EACH job (minimum of 3 bullet points per job) [THIS REQUIREMENT IS ABSOLUTE]
+**Work Experience:**
+- Sort in reverse chronological order (newest first)
+- Header format: "Company | Job Title | Timespan"
+- Use "•" character for bullet points
+- 3-5 substantial bullet points per job (minimum 3)
+- Each bullet point: 3-4 detailed sentences with responsibility, specific achievements, and metrics
+- No duplicate bullet points within each job
 
-**Education Format Requirements (EXTREMELY IMPORTANT)**:
-- Format EACH education header line EXACTLY as: "Institution | Degree | Timespan". Example: "University of Toronto | Master of Engineering (Artificial Intelligence) | 2021 - 2024"
-- Do NOT use bullet points for the main institution and degree line
-- The degree should be on its own line after the institution/timespan line
-- Use bullet points ONLY for details under each degree (GPA, honors, scholarships, etc.)
-- Structure education entries exactly like work experience entries with the institution/timespan headers in the same format as company/timespan headers
+**Education:**
+- Sort in reverse chronological order (newest first)
+- Header format: "Institution | Degree | Timespan"
+- Use bullet points only for details (GPA, honors, scholarships)
+- No bullet points for main degree line
 
-Your output response should be only a JSON object with the following structure:
+## Output Requirements:
+Return ONLY a valid JSON object with this exact structure:
+
+```json
 {
-    "applicant_name": "my full name",
-    "contact_info": "my contact information (phone, email etc, if any of these exist)",
-    "summary": ["summary point 1", "summary point 2", "summary point 3", "summary point 4", "summary point 5"],
-    "skills": ["skill1", "skill2", "skill3", ...],
+    "applicant_name": "Full Name",
+    "contact_info": "Phone, email if available",
+    "summary": ["point 1", "point 2", "point 3", "point 4", "point 5"],
+    "skills": ["skill1", "skill2", "skill3"],
     "sections": [
         {
             "title": "Work Experience",
-            "content": "Job Title | Company | Timespan\\n• Detailed bullet point with responsibility and experiences.\\n• Another detailed achievement with quantifiable results and metrics.\\n• Third detailed bullet point with specific achievement.\\n etc..."
+            "content": "Company | Job Title | Timespan\n• Detailed bullet point...\n• Another achievement...\n• Third accomplishment..."
         },
         {
-            "title": "Education",
-            "content": "Degree | Institution | Timespan\\nInstitution Name\\n• Relevant details or achievements"
-        },
-        ... other sections as needed
-    ],
+            "title": "Education", 
+            "content": "Institution | Degree | Timespan\n• Relevant details and more..."
+        }
+    ]
 }
 
 **Output Format Requirements (VERY IMPORTANT)**:
-1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
+1. Ensure proper JSON formatting with escaped characters as your only response.
 2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
 4. The "summary" field MUST be an array of strings with EXACTLY 5 points
