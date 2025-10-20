@@ -82,7 +82,8 @@ Focus on surgical improvements to existing content rather than wholesale section
 resume_suggestion_gen_user_prompt = """
 Based on the given job posting and my resume, generate **5 specific, targeted content changes** to improve ATS compatibility and job relevance.
 
-**Requirements:**
+**Your task & Requirements:**
+- Review my base resume content carefully (provided as text) expecially the experience section and correctly identify which company, roles, and bullet points you are suggesting changes for
 - Suggestion targets specific sentences, bullet point(s), or phrases within sections (NOT entire section replacements)
 - Incorporate relevant keywords from the job posting naturally
 - Quantify achievements where realistic
@@ -95,7 +96,7 @@ Return ONLY a valid JSON object:
 {{
     "resume_suggestions": [
         {
-            "where": "Section location indicator in the original resume (e.g., 'Work Experience - Company X')",
+            "where": "Section location indicator in the original resume (e.g., 'Work Experience - Company X'), you must correctly identify which company it is",
             "suggestion": "The exact tailored new suggestion text only within a specific resume section content",
             "reason": "Brief explanation of why this change improves resume"
         }
