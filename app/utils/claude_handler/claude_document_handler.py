@@ -7,62 +7,41 @@ from app.models.uploaded_doc import UploadedDocument
 from app.custom_exceptions import FileTypeNotSupportedError, GeneralServerError
 
 
+import base64
+from typing import Dict, Any
+from app.models.uploaded_doc import UploadedDocument
+from app.custom_exceptions import FileTypeNotSupportedError, GeneralServerError
+
+
 def prepare_document_for_claude(doc: UploadedDocument) -> Dict[str, Any]:
+    """
+    Prepares a document for Claude API using native PDF support.
+    Claude now handles PDF parsing directly with full vision capabilities.
+
+    Args:
+        doc: UploadedDocument containing base64 content, file type, and name
+
+    Returns:
+        Dict with proper format for Claude API document block
+    """
     try:
-        # Decode the base64 content to binary
-        binary_content = base64.b64decode(doc.base64_content)
-
-        if doc.file_type == "application/pdf":
-            # Extract text from PDF
-            pdf_file = BytesIO(binary_content)
-            reader = PdfReader(pdf_file)
-            full_extracted_text = ""
-            for page in reader.pages:
-                full_extracted_text += "page1:" + "\n" + page.extract_text() + "\n\n"
-            return {"type": "text", "text": full_extracted_text}
-
-        elif doc.file_type == "text/plain":
-            # For TXT files, simply decode to text
-            full_extracted_text = binary_content.decode("utf-8")
-            return {"type": "text", "text": full_extracted_text}
-
-        elif doc.file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            # Handle DOCX
-            doc_file = BytesIO(binary_content)
-            document = Document(doc_file)
-
-            all_extracted_components = []
-
-            # Extract text from paragraphs
-            for paragraph in document.paragraphs:
-                all_extracted_components.append(paragraph.text)
-
-            # Extract text from tables
-            for table in document.tables:
-                for row in table.rows:
-                    for cell in row.cells:
-                        all_extracted_components.append(cell.text)
-
-            # Extract text from headers and footers
-            for section in document.sections:
-                for header in section.header.paragraphs:
-                    all_extracted_components.append(header.text)
-                for footer in section.footer.paragraphs:
-                    all_extracted_components.append(footer.text)
-
-            full_extracted_text = "\n\n".join(all_extracted_components)
-            return {"type": "text", "text": full_extracted_text}
-
-        else:
+        # Only accept PDF files now
+        if doc.file_type != "application/pdf":
             raise FileTypeNotSupportedError(
-                error_detail_message=f"{doc.name} file type '{doc.file_type}' is not supported. Must be either pdf, docx, or txt"
+                error_detail_message=f"{doc.name} file type '{doc.file_type}' is not supported. Only PDF files are accepted."
             )
 
-    # raise keyword: immediately jump to the nearest except block that matches the exception type.
+        # Return document in Claude's native PDF format
+        # Claude will handle all parsing internally with vision capabilities
+        return {
+            "type": "document",
+            "source": {"type": "base64", "media_type": "application/pdf", "data": doc.base64_content},  # Already base64 encoded from frontend
+        }
+
     except FileTypeNotSupportedError:
-        # we can directly raise this as we have already raised with detail for FileTypeNotSupportedError error type above
+        # Re-raise our custom error
         raise
 
     except Exception as e:
         print(f"Error processing document {doc.name}: {str(e)}")
-        raise GeneralServerError(error_detail_message="Something went wrong while process your docs")
+        raise GeneralServerError(error_detail_message=f"Something went wrong while processing your document: {doc.name}")
