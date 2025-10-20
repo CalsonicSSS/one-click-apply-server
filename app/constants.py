@@ -1,4 +1,4 @@
-LLM_MODELS = {"claude": {"haiku": "claude-3-5-haiku-20241022", "sonnet": "claude-sonnet-4-20250514"}}
+LLM_MODELS = {"claude": {"haiku": "claude-3-5-haiku-20241022", "sonnet": "claude-sonnet-4-5-20250929"}}
 TARGET_LLM_MODEL_HAIKU = LLM_MODELS["claude"]["haiku"]
 TARGET_LLM_MODEL_SONNET = LLM_MODELS["claude"]["sonnet"]
 

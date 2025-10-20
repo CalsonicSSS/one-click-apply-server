@@ -116,90 +116,106 @@ Critical Rules:
 
 
 full_resume_gen_system_prompt = """
-You are an expert resume writer specializing in ATS-optimized, job-specific resume tailoring. 
+You are an expert ATS-optimized resume writer specializing in creating concise, single-page resumes tailored to specific job postings.
 
 ## Core Responsibilities:
 1. **Analyze** the job posting to identify key requirements, skills, and keywords
-2. **Extract** relevant contents, experiences and achievements from the user's base resume and their additional supporting documents
-3. **Generate** a complete, tailored resume that maximizes relevance to the specific position
+2. **Extract** relevant experiences and achievements from the user's base resume and any other supporting documents
+3. **Generate** a complete, tailored resume that maximizes relevance while PRESERVING the user's original structure
+
+## Critical Structure Preservation Rules:
+- **MATCH the exact number of bullet points** from the user's original resume for each job role and other sections
+- **PRESERVE the number of skills** the user originally listed
+- **MAINTAIN the original content order and length** on the job experiences for your generated version (keep the same order for all the jobs experiences from top to bottom, and similar word count from the user provided resume)
+- **ENHANCE content quality** by incorporating job posting keywords and quantifying achievements
+- You MUST use the existing user provided resume and other documents for IMPROVING resuyme existing content, NOT inventing new content for the user.
 
 ## Resume Creation Standards:
 - **ATS Optimization:** Incorporate job posting keywords naturally throughout
-- **Quantified Impact:** Use specific metrics, percentages, and measurable outcomes
-- **Relevance Focus:** Prioritize experiences and skills most aligned with job requirements based on the user' based resume and any additional supporting documents
-- **Professional Format:** Clean, consistent structure limited to 2 pages maximum
+- **Quantified Impact:** Use specific metrics, percentages, and measurable outcomes where the user already has them
+- **Relevance Focus:** Prioritize experiences and skills most aligned with job requirements
+- **Concise Format:** Clean, consistent structure LIMITED TO EXACTLY 1 PAGE
 
 ## Output Requirements:
 - Return only valid JSON in the specified structure
 - Ensure proper character escaping and formatting
-- Focus on quantifiable achievements over responsibilities
+- Focus on quantifiable achievements over generic responsibilities
+- Keep all content concise to fit on a single page
 
-Your ultimate goal is to transform the user's background into a compelling, job-specific narrative that demonstrates clear value to the target employer.
+Your ultimate goal is to enhance the user's existing resume content to make it more compelling and ATS-friendly for the target position, while respecting their original structure and experience.
 """
 
 full_resume_gen_user_prompt = """
-Based on the given job posting detail and my given base resume and my other professional documents, help me generate a complete, ATS-optimized and tailored resume. Maximum 2 pages approximately.
+Based on the given job posting details and my base resume and supporting documents, help me generate a complete, ATS-optimized, and tailored resume that fits on EXACTLY 1 PAGE.
 
-## Required Structure & Content:
-- **Contact Information:** Name, phone, email (no social media links)
-- **Professional Summary:** 5 bullet points highlighting relevant experience with quantifiable achievements in high level overview and mentioning key skills
-- **Skills:** Most relevant skills for the position
-- **Work Experience:** Detailed job descriptions with metrics-based achievements
-- **Education:** Educational background with relevant highlights
-- **Additional Sections:** MUST include separate sections for certifications, achievements, awards, or other valuable content from original resume (create appropriate section titles like "Achievements", "Certifications", "Awards", etc.)
+## CRITICAL REQUIREMENT: PRESERVE MY ORIGINAL STRUCTURE
+- **Match the exact number of bullet points** I have for each job in my original resume
+- **Keep the same number of skills** I listed originally but enhance them
+- **Do not add or remove job positions** - only enhance what I already have
+- **Improve the wording and content** to include job posting keywords and quantifiable achievements
+- If I have 2 bullets for a job, generate 2 enhanced bullets. If I have 4, generate 4.
+- **maintain the generated word count similar to my original resume for all the sections to ensure it fits on 1 page**
+
+## Required Structure & Content (STRICT ORDER):
+1. **Contact Information:** Name, phone, email (no social media links)
+2. **SUMMARY:** 2-3 concise sentences highlighting relevant experience with quantifiable achievements
+3. **SKILLS:** Most relevant skills for the position (match the number from my original resume)
+4. **PROFESSIONAL EXPERIENCE:** Detailed job descriptions with metrics-based achievements
+5. **EDUCATION:** Educational background with relevant highlights
 
 ## Formatting Requirements:
 
-**Work Experience Section:**
-- Sort in reverse chronological order (newest first)
+**SUMMARY Section:**
+- Provide 2-3 concise sentences for self-intro professional as full whole summary short paragraph that highlight my key qualifications relevant to the job posting
+- Focus on high-impact achievements and relevant skills
+
+**SKILLS Section:**
+- Preserve the number of skills and content from my original resume Or generate relevant skills if I have none listed
+- each skill bullet point string should include both category and specific skill (e.g., "Programming Languages: Python, Java")
+- Prioritize and update the skills to most relevant to the job posting
+- Use keywords from the job description
+
+**PROFESSIONAL EXPERIENCE Section:**
+- keep the same order of job experiences as my original resume from top to bottom or from newest to oldest
 - Header format: "Company | Job Title | Timespan"
+- **CRITICAL:** Match the exact number of bullet points from my original resume for each job
 - Use "•" character for bullet points
-- generate several bullet points per job role (minimum 3, use your own judgement on how many to include here for me)
-- Each bullet point covers one specific aspect (responsibility, achievement, impact, other etc.)
-- Keep each of bullet point content concise, but also detailed and impactful (keep each bullet point word count around 25-30 words - very important)
+- Keep each bullet point content length 30 words max
+- Each bullet point covers one specific aspect (responsibility / action, achievement, impact)
 - No duplicate bullet points within each job
 
-**Education Section:**
-- Sort in reverse chronological order (newest first)
+**EDUCATION Section:**
+- keep the same order of education entries as my original resume or from newest to oldest
 - Header format: "Institution | Degree | Timespan"
-- Use bullet points only for details (GPA, honors, scholarships)
+- Use bullet points only for notable details (GPA, honors, scholarships) if present in original resume
 - No bullet points for main degree line
-
-**Achievements Section:**
-- Create section with Achievements titles 
-- Format each item under this section from the original resume contains the achievements with bullet points
 
 ## Output Requirements:
 Return ONLY a valid JSON object with this exact structure:
 
-
 {{
     "applicant_name": "Full Name",
     "contact_info": "Phone, email if available",
-    "summary": ["point 1", "point 2", "point 3", "point 4", "point 5"],
-    "skills": ["skill1", "skill2", "skill3"],
+    "summary": "summary 2-3 concise sentences as single paragraph highlighting key qualifications relevant to the job posting",
+    "skills": ["Programming Languages: Python, Java", "Business Analysis: Requirements Gathering, Stakeholder Management", "..."],
     "sections": [
-        {
+        {{
             "title": "Work Experience",
-            "content": "Company | Job Title | Timespan\n• Detailed bullet point...\n• Another achievement...\n• Third accomplishment..."
-        },
-        {
+            "content": "Company | Job Title | Timespan\\n• Concise bullet point...\\n• Another achievement..."
+        }},
+        {{
             "title": "Education", 
-            "content": "Institution | Degree | Timespan\n• Relevant details and more..."
-        },
-        {
-            "title": "Achievements",
-            "content": "• Achievement detail 1\n• Achievement detail 2"
-        }
+            "content": "Institution | Degree | Timespan\\n• Relevant details if any..."
+        }}
     ]
 }}
 
-
 **Critical Output Requirements:**
-1. Ensure proper JSON data formatting with escaped characters as your only response
-2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON
+1. Ensure proper JSON formatting with escaped characters
+2. Do not include any other text, explanations, markdown, or extra info before or after the JSON
 3. Make sure all special string values are properly escaped (quotation marks, backslashes, newlines)
-4. The "content" field in each section must be a single text string with proper formatting
+4. The "content" field in each section must be a single text string with \\n for line breaks
+5. Keep ALL content concise to fit on exactly 1 page when formatted
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
