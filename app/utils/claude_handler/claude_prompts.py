@@ -170,10 +170,9 @@ Based on the given job posting details and my base resume and supporting documen
 - Focus on high-impact achievements and relevant skills
 
 **SKILLS Section:**
-- Preserve the number of skills and content from my original resume Or generate relevant skills if I have none listed
+- Preserve the number of skills and content from my original resume Or generate relevant skills if I don't have any listed
 - each skill bullet point string should include both category and specific skill (e.g., "Programming Languages: Python, Java")
-- Prioritize and update the skills to most relevant to the job posting
-- Use keywords from the job description
+- Prioritize and update the skills to most relevant to the job posting | Use keywords from the job description
 
 **PROFESSIONAL EXPERIENCE Section:**
 - keep the same order of job experiences as my original resume from top to bottom or from newest to oldest
@@ -181,8 +180,8 @@ Based on the given job posting details and my base resume and supporting documen
 - **CRITICAL:** Match the exact number of bullet points from my original resume for each job
 - Use "•" character for bullet points
 - Keep each bullet point content length 30 words max
-- Each bullet point covers one specific aspect (responsibility / action, achievement, impact)
-- No duplicate bullet points within each job
+- Each bullet point covers one specific aspect (responsibility / action, achievement, impact), No duplicate bullet points within each job
+- try to use "action, result-oriented" language with quantifiable metrics where possible
 
 **EDUCATION Section:**
 - keep the same order of education entries as my original resume or from newest to oldest
@@ -201,7 +200,7 @@ Return ONLY a valid JSON object with this exact structure:
     "sections": [
         {{
             "title": "Work Experience",
-            "content": "Company | Job Title | Timespan\\n• Concise bullet point...\\n• Another achievement..."
+            "content": "Company | Job Title | Timespan\\n• Concise bullet point...\\n• Another one..."
         }},
         {{
             "title": "Education", 
