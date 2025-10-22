@@ -349,7 +349,6 @@ async def generate_cover_letter_handler(
     supporting_docs: list[UploadedDocument] = None,
 ) -> CoverLetterGenerationResponse:
     print("generate_cover_letter_handler runs")
-    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -468,7 +467,6 @@ async def generate_application_question_answer_handler(
     supporting_docs: Optional[List[UploadedDocument]] = None,
 ) -> ApplicationQuestionAnswerResponse:
     print("generate_application_question_answer_handler runs")
-    print("target llm:", TARGET_LLM_MODEL_HAIKU)
 
     # Prepare job details text
     extracted_full_job_posting_details_text = f"""
@@ -523,7 +521,7 @@ async def generate_application_question_answer_handler(
             # raise Exception("Testing OpenAI fallback")
 
             llm_response = await claude_message_api(
-                model=TARGET_LLM_MODEL_HAIKU,
+                model=TARGET_LLM_MODEL_SONNET,
                 system_prompt=application_question_system_prompt,
                 messages=[{"role": "user", "content": user_prompt_content_blocks}],
                 temp=0.2,
