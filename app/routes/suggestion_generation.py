@@ -16,8 +16,7 @@ from app.services.suggestion_generation import (
 from fastapi import Body
 from app.models.application_question import ApplicationQuestionAnswerRequestInputs, ApplicationQuestionAnswerResponse
 from app.utils.firecrawl import firecrawl_app
-from app.custom_exceptions import FirecrawlInsufficientExtractionError, NotEnoughCreditsError, GeneralServerError, GeneralFirecrawlError
-from app.db.database import check_user_credits
+from app.custom_exceptions import FirecrawlInsufficientExtractionError, GeneralServerError, GeneralFirecrawlError
 
 # Tags are used to group related endpoints in the automatically generated API documentation (Swagger UI or ReDoc).
 router = APIRouter(prefix="/generation", tags=["generation"])
@@ -27,10 +26,6 @@ router = APIRouter(prefix="/generation", tags=["generation"])
 async def evaluate_job_posting_html_content(requestInputs: JobPostingEvalRequestInputs = Body(...)):
     print("/job-posting/evaluate endpoint reached")
     raw_content = None
-
-    # Check user credits
-    if not await check_user_credits(requestInputs.browser_id):
-        raise NotEnoughCreditsError(error_detail_message="Not enough credits. Let's get some! Wohoo 🚀")
 
     if requestInputs.website_url:
         print("web url:", requestInputs.website_url)

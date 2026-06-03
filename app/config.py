@@ -43,15 +43,10 @@ class Settings(BaseSettings):
 
     PORT: int = 8000
 
-    # MongoDB settings
-    MONGO_URI: str
-    MONGO_DB_NAME: str
-
-    # Stripe settings
-    STRIPE_SECRET_KEY: str
-    STRIPE_WEBHOOK_SECRET: str
-
     FIRECRAWL_API_KEY: str
+
+    # NOTE: MongoDB and Stripe were removed — credits/payments are disabled.
+    # Any leftover MONGO_*/STRIPE_* env vars in the deploy environment are simply ignored.
 
     # we use this Config class here as a nested class to further configure the "Settings" class (This is the pydantic feature)
     class Config:

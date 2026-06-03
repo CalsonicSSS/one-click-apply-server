@@ -1,60 +1,36 @@
-from motor.motor_asyncio import AsyncIOMotorClient
-from app.config import get_settings
-from datetime import datetime
+# Database layer removed — credits/payments are disabled for this stage of the app.
+#
+# These are no-op stubs that preserve the exact import surface the routes/services
+# already depend on, so nothing else has to change and the already-published Chrome
+# extension keeps working. There is no MongoDB connection anymore (that SRV-record
+# lookup at client init was what was crashing the deploy).
 
 from app.models.user import User
 
-settings = get_settings()
-
-# MongoDB client instance
-client = AsyncIOMotorClient(settings.MONGO_URI)
-db = client[settings.MONGO_DB_NAME]
-
-# Collections
-users = db.users
+# A generous fixed balance so the existing frontend always shows plenty of credits
+# and never blocks generation.
+_UNLIMITED_CREDITS = 999999
 
 
-# Initialize indexes
 async def init_db():
-    print("init_db")
-    await users.create_index("browser_id", unique=True)
+    print("init_db (no-op: database disabled)")
 
 
 async def close_db_connection():
-    print("close_db")
-    client.close()
+    print("close_db (no-op: database disabled)")
 
 
-async def get_or_create_user(browser_id: str) -> dict:
-    # Try to find existing user
-    user = await users.find_one({"browser_id": browser_id})
-
-    if user:
-        return User(browser_id=user["browser_id"], credits=user["credits"])
-
-    # Create new user with 10 free credits
-    # for the development version, you can set the initial credit to whatever
-    new_user = {"browser_id": browser_id, "credits": 10, "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
-
-    await users.insert_one(new_user)
-    # manully return a new user object with 10 credits free initially
-    return User(browser_id=browser_id, credits=10)
-
-
-async def update_user_credits(browser_id: str, credits_to_add: int) -> dict:
-    result = await users.find_one_and_update(
-        {"browser_id": browser_id}, {"$inc": {"credits": credits_to_add}, "$set": {"updated_at": datetime.utcnow()}}, return_document=True
-    )
-    return User(browser_id=browser_id, credits=result["credits"])
+async def get_or_create_user(browser_id: str) -> User:
+    return User(browser_id=browser_id, credits=_UNLIMITED_CREDITS)
 
 
 async def check_user_credits(browser_id: str) -> bool:
-    user = await users.find_one({"browser_id": browser_id})
-    if not user or user["credits"] < 1:
-        return False
     return True
 
 
 async def consume_credit(browser_id: str) -> bool:
-    await update_user_credits(browser_id, -1)
     return True
+
+
+async def update_user_credits(browser_id: str, credits_to_add: int) -> User:
+    return User(browser_id=browser_id, credits=_UNLIMITED_CREDITS)
