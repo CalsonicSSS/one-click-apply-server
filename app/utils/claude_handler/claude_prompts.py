@@ -89,6 +89,7 @@ Based on the given job posting and my resume, generate **5 specific, targeted co
 - Quantify achievements where realistic
 - Match the length and style of the original content being replaced (very important)
 - Keep suggestions professional and realistic
+- Make your suggestions concise and not too long
 
 **Output Format:**
 Return ONLY a valid JSON object:
@@ -235,6 +236,8 @@ Your goal is to:
 4. Finally, make sure generated output handles and escapes control or special characters properly while preserving formatting. 
 
 Your cover letter generation should be specific, practical, and tailored. Make it more appealing for this particular job posting detail.
+
+make sure the cover letter length is concise and fits within one pdf page when formatted (this is critical)
 """
 
 
@@ -265,6 +268,7 @@ VERY IMPORTANT OUTPUT RULES:
 1. Your response must be ONLY a valid JSON object with the required fields filled in exactly as specified above. Ensure the JSON is properly formatted without any syntax errors.
 2. Do not include any other text, explanations, markdown, formatting, or extra info before or after the JSON.
 3. Make sure all special string values are all properly escaped, and handled especially for quotation marks, backslashes, and newlines.
+4. make sure the cover letter length is concise and fits within one pdf page when formatted (this is critical)
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -298,7 +302,7 @@ Your answer should:
 - Be specific / tailored to this question and its intention based on the job posting context and any background details (critical).
 - Try to answer with passion and friendly tone (Not professional), and leverage my background context (resume and other additional context) I provided here for the answer when possible.
 - Be authentic and humanize your response to make it look real but NOT AI Generated sound.
-- Be concise about your response as this is aim for short answer form inputs (unless additional requirement state otherwise).
+- Be concise with your response as this is aim for short and concise answer for form inputs - this is important
 - Follow my additional_requirements if I have as priority for answer this question (if there is any).
 
 Return your response in the exact JSON format below:
